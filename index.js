@@ -22,10 +22,12 @@ app.get('/', (req,res) => {
 })
 
 const { 
-   kandangRouter
+   kandangRouter,
+   userRouter
 } = require('./router')
 
 app.use('/kandang', kandangRouter)
+app.use('/user', userRouter)
 
 // app.listen(port , ()=>{
 //     console.log('api akitf bro')
