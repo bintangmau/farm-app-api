@@ -25,13 +25,17 @@ module.exports = {
         })
     },
     getDataKandang: (req, res) => {
-        const sql = `SELECT * FROM kandang.unit WHERE fid_owner = ${req.logedUser.id_owner} AND fid_location = ${req.params.id_location};`
+        const sql = `SELECT u.id_unit, u.unit_name, l.location_name, u.fid_location AS id_location 
+                FROM kandang.unit u
+                JOIN kandang."location" l
+                ON l.id_location = u.fid_location
+                WHERE u.fid_owner = ${req.logedUser.id_owner} AND u.fid_location = ${req.params.id_location};`
 
-        db.query(sql, (err, results) => {
+            db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
             } 
-
+            // console.log(results.rows)
             res.status(200).send(results.rows)
         })
     },

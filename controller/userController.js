@@ -9,7 +9,7 @@ module.exports = {
         .update(req.body.password)
         .digest('hex');
 
-        const sql = `SELECT * FROM "humanResource"."owner" WHERE ownername = '${req.body.username}' AND password = '${passwordEnc}';`
+        const sql = `SELECT id_owner, ownername FROM "humanResource"."owner" WHERE ownername = '${req.body.username}' AND password = '${passwordEnc}';`
 
         db.query(sql, (err, results) => {
             if(err) {
@@ -27,7 +27,7 @@ module.exports = {
 
             var response = {
                 message,
-                data: results.rows,
+                data: results.rows[0],
                 token: tokens
             }
             res.status(200).send(response)
