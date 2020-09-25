@@ -108,15 +108,35 @@ module.exports = {
         })
     },
     addDaysRecordReport: (req, res) => {
+        // SEMENTARA
+        var ekor = 300
+        var pakan = 36
+
         var data = req.body
+        var tray = 0
+        var tara = 0
+        var netto = 0
+        var sisaEkor = 0
+        var presentase = 0
+        var okg = 0
+        var fcr = 0 
+
+        tray = Math.ceil(data.jumlah_butir / 30)
+        tara = 0.14 * tray
+        netto = data.kg - tara.toFixed(2)
+        sisaEkor = ekor - data.mati_afkir
+        presentase = Math.ceil(data.jumlah_butir / ekor * 100)
+        okg = netto / ekor * 100
+        fcr = pakan / netto
+        
         const sql = `INSERT INTO kandang.days_record_report 
             (fid_owner, fid_location, fid_unit, fid_rows, 
-                jumlah_butir, kg, "K/P", tara, netto, mati_afkir, sisa_ekor, "%", 
+                jumlah_butir, kg, tray, tara, netto, mati_afkir, sisa_ekor, presentase, 
                 "100/kg", fcr)
             VALUES 
             (${req.logedUser.id_owner}, ${data.id_location}, ${data.id_unit}, ${data.id_rows},
-                '${data.jumlah_butir}', '${data.kg}', '${data.kp}', '${data.tara}', '${data.netto}', '${data.mati_afkir}', '${data.sisa_ekor}', '${data.persen}', 
-                '${data.okg}', '${data.fcr}');`
+                '${data.jumlah_butir}', '${data.kg}', '${tray}', '${tara.toFixed(2)}', '${netto}', '${data.mati_afkir}', '${sisaEkor}', '${presentase}', 
+                '${okg.toFixed(2)}', '${fcr.toFixed(2)}');`
 
         db.query(sql, (err, results) => {
             if(err) {
