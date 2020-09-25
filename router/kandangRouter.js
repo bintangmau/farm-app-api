@@ -13,5 +13,6 @@ router.post('/add-rows', authentication, kandangController.addRows)
 router.post('/delete-location/:id_location', authentication, kandangController.deleteLocation)
 router.post('/delete-unit/:id_unit', authentication, kandangController.deleteUnit)
 router.post('/delete-rows/:id_rows', authentication, kandangController.deleteRows)
+router.post('/add-days-record-report', authentication, kandangController.addDaysRecordReport)
 
 module.exports = router

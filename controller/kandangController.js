@@ -106,5 +106,24 @@ module.exports = {
 
             res.status(200).send({ message: 'Delete Rows Success' })
         })
+    },
+    addDaysRecordReport: (req, res) => {
+        var data = req.body
+        const sql = `INSERT INTO kandang.days_record_report 
+            (fid_owner, fid_location, fid_unit, fid_rows, 
+                jumlah_butir, kg, "K/P", tara, netto, mati_afkir, sisa_ekor, "%", 
+                "100/kg", fcr)
+            VALUES 
+            (${req.logedUser.id_owner}, ${data.id_location}, ${data.id_unit}, ${data.id_rows},
+                '${data.jumlah_butir}', '${data.kg}', '${data.kp}', '${data.tara}', '${data.netto}', '${data.mati_afkir}', '${data.sisa_ekor}', '${data.persen}', 
+                '${data.okg}', '${data.fcr}');`
+
+        db.query(sql, (err, results) => {
+            if(err) {
+                res.status(500).send(err)
+            } 
+
+            res.status(200).send({ message: 'Input Record Success' })
+        })
     }
 }
