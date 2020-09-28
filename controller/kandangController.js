@@ -108,11 +108,10 @@ module.exports = {
         })
     },
     addDaysRecordReport: (req, res) => {
-        // SEMENTARA
-        var ekor = 300
-        var pakan = 36
-
         var data = req.body
+        
+        var ekor = data.ayam
+        var pakan = data.pakan
         var tray = 0
         var tara = 0
         var netto = 0
@@ -132,11 +131,11 @@ module.exports = {
         const sql = `INSERT INTO kandang.days_record_report 
             (fid_owner, fid_location, fid_unit, fid_rows, 
                 jumlah_butir, kg, tray, tara, netto, mati_afkir, sisa_ekor, presentase, 
-                "100/kg", fcr)
+                "100/kg", fcr, ayam, pakan, tanggal)
             VALUES 
             (${req.logedUser.id_owner}, ${data.id_location}, ${data.id_unit}, ${data.id_rows},
-                '${data.jumlah_butir}', '${data.kg}', '${tray}', '${tara.toFixed(2)}', '${netto}', '${data.mati_afkir}', '${sisaEkor}', '${presentase}', 
-                '${okg.toFixed(2)}', '${fcr.toFixed(2)}');`
+                '${data.jumlah_butir}', '${data.kg}', '${tray}', '${tara.toFixed(2)}', '${netto.toFixed(2)}', '${data.mati_afkir}', '${sisaEkor}', '${presentase}', 
+                '${okg.toFixed(2)}', '${fcr.toFixed(2)}', '${ekor}', '${pakan}', NOW());`
         // console.log(data)
         // console.log(sql)
         db.query(sql, (err, results) => {
@@ -149,14 +148,23 @@ module.exports = {
     },
     getDaysRecordReport: (req, res) => {
         const sql = `SELECT * FROM kandang.days_record_report
-            WHERE fid_rows = ${req.body.id_rows};`
+            WHERE fid_rows = ${req.params.id_rows} ORDER BY id_record_report;
+            						
+            SELECT ayam, pakan FROM kandang."rows" WHERE id_rows = ${req.params.id_rows};`
 
         db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
             } 
-         
-            res.status(200).send(results.rows)
+           
+            var dataLaporan = results[0].rows
+            var data2 = results[1].rows
+            var response = {
+                data: dataLaporan,
+                ayam: data2[0].ayam,
+                pakan: data2[0].pakan
+            }
+            res.status(200).send(response)
         })
     },
     editAyamPakanRows: (req, res) => {

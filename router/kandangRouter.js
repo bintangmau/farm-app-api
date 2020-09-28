@@ -14,7 +14,7 @@ router.post('/delete-location/:id_location', authentication, kandangController.d
 router.post('/delete-unit/:id_unit', authentication, kandangController.deleteUnit)
 router.post('/delete-rows/:id_rows', authentication, kandangController.deleteRows)
 router.post('/add-days-record-report', authentication, kandangController.addDaysRecordReport)
-router.post('/get-days-record-report', authentication, kandangController.getDaysRecordReport)
+router.get('/get-days-record-report/:id_rows', authentication, kandangController.getDaysRecordReport)
 router.post('/edit-ayam-pakan-rows', authentication, kandangController.editAyamPakanRows)
 
 module.exports = router
