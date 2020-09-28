@@ -30,7 +30,7 @@ module.exports = {
                 JOIN kandang."location" l
                 ON l.id_location = u.fid_location
                 WHERE u.fid_owner = ${req.logedUser.id_owner} AND u.fid_location = ${req.params.id_location};`
-
+          
             db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
@@ -42,7 +42,7 @@ module.exports = {
     addKandang: (req, res) => {
         const sql = `INSERT INTO kandang.unit (fid_owner, fid_location, unit_name)
                 VALUES (${req.logedUser.id_owner}, ${req.body.id_location}, '${req.body.unit_name}');`
-        console.log(sql)
+       
         db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
@@ -137,13 +137,38 @@ module.exports = {
             (${req.logedUser.id_owner}, ${data.id_location}, ${data.id_unit}, ${data.id_rows},
                 '${data.jumlah_butir}', '${data.kg}', '${tray}', '${tara.toFixed(2)}', '${netto}', '${data.mati_afkir}', '${sisaEkor}', '${presentase}', 
                 '${okg.toFixed(2)}', '${fcr.toFixed(2)}');`
-
+        // console.log(data)
+        // console.log(sql)
         db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
             } 
 
             res.status(200).send({ message: 'Input Record Success' })
+        })
+    },
+    getDaysRecordReport: (req, res) => {
+        const sql = `SELECT * FROM kandang.days_record_report
+            WHERE fid_owner = ${req.logedUser.id_owner} AND fid_location = ${req.body.id_location} AND fid_unit = ${req.body.id_unit} AND fid_rows = ${req.body.id_rows};`
+
+        db.query(sql, (err, results) => {
+            if(err) {
+                res.status(500).send(err)
+            } 
+         
+            res.status(200).send(results.rows)
+        })
+    },
+    editAyamPakanRows: (req, res) => {
+        const sql = `UPDATE kandang."rows" SET ayam = '${req.body.ayam}', pakan = '${req.body.pakan}'
+        WHERE id_rows = ${req.body.id_rows};`
+        
+        db.query(sql, (err, results) => {
+            if(err) {
+                res.status(500).send(err)
+            } 
+         
+            res.status(200).send({ message: "Edit Ayam Pakan Success" })
         })
     }
 }
