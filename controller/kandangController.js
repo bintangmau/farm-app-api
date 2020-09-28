@@ -52,13 +52,13 @@ module.exports = {
         })
     },
     getDataRows: (req, res) => {
-        const sql = `SELECT * FROM kandang."rows" WHERE fid_owner = ${req.logedUser.id_owner} AND fid_location = ${req.body.id_location} AND fid_unit = ${req.body.id_unit};`
-
+        const sql = `SELECT * FROM kandang."rows" WHERE fid_owner = ${req.logedUser.id_owner} AND fid_location = ${req.body.id_location} AND fid_unit = ${req.body.id_unit} ORDER BY id_rows;`
+        
         db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
             } 
-
+   
             res.status(200).send(results.rows)
         })
     },
@@ -149,7 +149,7 @@ module.exports = {
     },
     getDaysRecordReport: (req, res) => {
         const sql = `SELECT * FROM kandang.days_record_report
-            WHERE fid_owner = ${req.logedUser.id_owner} AND fid_location = ${req.body.id_location} AND fid_unit = ${req.body.id_unit} AND fid_rows = ${req.body.id_rows};`
+            WHERE fid_rows = ${req.body.id_rows};`
 
         db.query(sql, (err, results) => {
             if(err) {
@@ -162,12 +162,12 @@ module.exports = {
     editAyamPakanRows: (req, res) => {
         const sql = `UPDATE kandang."rows" SET ayam = '${req.body.ayam}', pakan = '${req.body.pakan}'
         WHERE id_rows = ${req.body.id_rows};`
-        
+       
         db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
             } 
-         
+          
             res.status(200).send({ message: "Edit Ayam Pakan Success" })
         })
     }
