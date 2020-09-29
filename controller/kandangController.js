@@ -3,7 +3,7 @@ const { db } = require('../helper/database')
 module.exports = {
     getDataLocation: (req, res) => {
         const sql = `SELECT * FROM kandang."location" WHERE fid_owner = ${req.logedUser.id_owner};`
-
+        
         db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
@@ -135,7 +135,9 @@ module.exports = {
             VALUES 
             (${req.logedUser.id_owner}, ${data.id_location}, ${data.id_unit}, ${data.id_rows},
                 '${data.jumlah_butir}', '${data.kg}', '${tray}', '${tara.toFixed(2)}', '${netto.toFixed(2)}', '${data.mati_afkir}', '${sisaEkor}', '${presentase}', 
-                '${okg.toFixed(2)}', '${fcr.toFixed(2)}', '${ekor}', '${pakan}', NOW());`
+                '${okg.toFixed(2)}', '${fcr.toFixed(2)}', '${ekor}', '${pakan}', NOW());
+                
+            UPDATE kandang."rows" SET ayam = '${sisaEkor}', presentase = '${presentase}', fcr = '${fcr.toFixed(2)}' WHERE id_rows = ${data.id_rows};`
         // console.log(data)
         // console.log(sql)
         db.query(sql, (err, results) => {
@@ -177,6 +179,69 @@ module.exports = {
             } 
           
             res.status(200).send({ message: "Edit Ayam Pakan Success" })
+        })
+    },
+    totalCount: (req, res) => {
+        var data = req.body
+
+        const sql = `SELECT * FROM kandang.days_record_report WHERE fid_rows = ${data.id_rows} ORDER BY id_record_report;
+                    SELECT * FROM kandang."rows" WHERE fid_unit = ${data.id_unit} ORDER BY id_rows;
+                    
+                    SELECT * FROM kandang.unit WHERE fid_location = ${data.id_location} ORDER BY id_unit;
+                    SELECT * FROM kandang."location" WHERE fid_owner = ${req.logedUser.id_owner} ORDER BY id_location;
+                    
+                    SELECT COUNT(*) FROM kandang.days_record_report WHERE fid_rows = ${data.id_rows};
+                    SELECT COUNT(*) FROM kandang."rows" WHERE fid_unit = ${data.id_unit};
+                    SELECT COUNT(*) FROM kandang.unit WHERE fid_location = ${data.id_location};
+                    SELECT COUNT(*) FROM kandang."location" WHERE fid_owner = ${req.logedUser.id_owner};`
+    
+        db.query(sql, (err, results) => {
+            if(err) {
+                res.status(500).send(err)
+            } 
+            var reports = results[0].rows
+            var rows = results[1].rows
+            var kandang = results[2].rows
+            var location = results[3].rows
+            var reportCount = results[4].rows[0].count
+            var rowCount = results[5].rows[0].count
+            var kandangCount = results[6].rows[0].count
+            var locationCount = results[7].rows[0].count
+
+            var reportJumlahButir = 0
+            var reportKg = 0
+            var reportTray = 0
+            var reportTara = 0
+            var reportNetto = 0
+            var reportMatiAfkir = 0
+            var reportSisaEkor = 0
+            var reportPresentase = 0
+            var report100Kg = 0
+            var reportFcr = 0
+
+            var reportTanggal = 0
+
+            reports.forEach(e => {
+                reportJumlahButir += Number(e.jumlah_butir)
+                reportKg += Number(e.kg)
+                reportTray += Number(e.tray)
+                reportTara += Number(e.tara)
+                reportNetto += Number(e.netto)
+                reportMatiAfkir += Number(e.mati_afkir)
+                
+            });
+
+            console.log(reportJumlahButir, 'jumlah butir')
+            console.log(reportKg, 'kg')
+            console.log(reportTray, 'tray')
+            console.log(reportTara, 'tara')
+            console.log(reportNetto, 'netto')
+            console.log(reportMatiAfkir, 'matia afkir')
+            console.log(reportSisaEkor, 'sisa ekor')
+            console.log(reportAyam, 'ayam')
+            console.log(reportPakan, 'pakan')
+
+            res.status(200).send({ message: "get bisa"})
         })
     }
 }
