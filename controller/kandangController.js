@@ -145,36 +145,25 @@ module.exports = {
             } 
 
             const sqlGet = `SELECT * FROM kandang.days_record_report WHERE fid_rows = ${data.id_rows} ORDER BY id_record_report;
-                        SELECT * FROM kandang."rows" WHERE fid_unit = ${data.id_unit} ORDER BY id_rows;
+                       
                         
-                        SELECT * FROM kandang.unit WHERE fid_location = ${data.id_location} ORDER BY id_unit;
-                        SELECT * FROM kandang."location" WHERE fid_owner = ${req.logedUser.id_owner} ORDER BY id_location;
-                        
-                        SELECT COUNT(*) FROM kandang.days_record_report WHERE fid_rows = ${data.id_rows};
-                        SELECT COUNT(*) FROM kandang."rows" WHERE fid_unit = ${data.id_unit};
-                        SELECT COUNT(*) FROM kandang.unit WHERE fid_location = ${data.id_location};
-                        SELECT COUNT(*) FROM kandang."location" WHERE fid_owner = ${req.logedUser.id_owner};`
+                        SELECT COUNT(*) FROM kandang.days_record_report WHERE fid_rows = ${data.id_rows};`
         
             db.query(sqlGet, (err, resultsGet) => {
                 if(err) {
                     res.status(500).send(err)
                 } 
+                
                 var reports = resultsGet[0].rows
-                // var rows = resultsGet[1].rows
-                // var kandang = resultsGet[2].rows
-                var location = resultsGet[3].rows
-                var reportCount = resultsGet[4].rows[0].count
-                // var rowCount = resultsGet[5].rows[0].count
-                // var kandangCount = resultsGet[6].rows[0].count
-                var locationCount = resultsGet[7].rows[0].count
-    
+                var reportCount = resultsGet[1].rows[0].count
+                
                 var reportJumlahButir = 0
                 var reportKg = 0
                 var reportTray = 0
                 var reportTara = 0
                 var reportNetto = 0
                 var reportMatiAfkir = 0
-                var reportSisaEkor = 0
+                var reportSisaEkor = ekor
                 var reportPresentase = 0
                 var report100Kg = 0
                 var reportFcr = 0
@@ -190,15 +179,16 @@ module.exports = {
                     reportPresentase += Number(e.presentase)
                     report100Kg += Number(e['100/kg'])
                     reportFcr += Number(e.fcr)
+                    reportSisaEkor += Number(e.ayam)
                 });
     
                 reportPresentase = reportPresentase/reportCount
                 report100Kg = report100Kg/reportCount
                 reportFcr = reportFcr/reportCount
-                
+
                 const sqlTotalRows = `UPDATE kandang."rows" SET 
-                jumlah_butir = '${reportJumlahButir}', tray = '${reportTray}', kg = '${reportKg}', tara = '${reportTara.toFixed(2)}', netto = '${reportNetto.toFixed(2)}', mati_afkir = '${reportMatiAfkir}', 
-                sisa_ekor = '${reportSisaEkor}', "100/kg" = ${report100Kg}, tanggal = NOW() WHERE id_rows = ${data.id_rows};`
+                jumlah_butir = '${reportJumlahButir}', tray = '${reportTray}', kg = '${reportKg.toFixed(2)}', tara = '${reportTara.toFixed(2)}', netto = '${reportNetto.toFixed(2)}', mati_afkir = '${reportMatiAfkir}', 
+                sisa_ekor = '${reportSisaEkor}', "100/kg" = ${report100Kg.toFixed(2)}, tanggal = NOW() WHERE id_rows = ${data.id_rows};`
          
                 db.query(sqlTotalRows, (err, resultTotalRows) => {
                     if(err) {
@@ -235,6 +225,7 @@ module.exports = {
                             rowsTara += Number(e.tara)
                             rowsNetto += Number(e.netto)
                             rowsMatiAfkir += Number(e.mati_afkir)
+                            rowsSisaEkor += Number(e.ayam)
                             rowsPresentase += Number(e.presentase)
                             rows100kg += Number(e['100/kg'])
                             rowsFcr += Number(e.fcr)
@@ -243,9 +234,9 @@ module.exports = {
                         rowsPresentase = rowsPresentase/rowCount
                         rows100kg = rows100kg.toFixed(2)/rowCount
                         rowsFcr = rowsFcr/rowCount
-                        
+
                         const sqlTotalKandang = `UPDATE kandang."unit" SET 
-                        jumlah_butir = '${rowsJumlahButir}', tray = '${rowsTray}', kg = '${rowsKg}', tara = '${rowsTara.toFixed(2)}', netto = '${rowsNetto.toFixed(2)}', mati_afkir = '${rowsMatiAfkir}', 
+                        jumlah_butir = '${rowsJumlahButir}', tray = '${rowsTray}', kg = '${rowsKg.toFixed(2)}', tara = '${rowsTara.toFixed(2)}', netto = '${rowsNetto.toFixed(2)}', mati_afkir = '${rowsMatiAfkir}', 
                         ayam = '${rowsSisaEkor}', presentase = '${rowsPresentase.toFixed(2)}', "100/kg" = ${rows100kg.toFixed(2)}, fcr = '${rowsFcr.toFixed(2)}', pakan = '${rowsPakan}', tanggal = NOW() WHERE id_unit = ${data.id_unit};`
                         
                         db.query(sqlTotalKandang, (err, resultTotalKandang) => {
@@ -284,6 +275,7 @@ module.exports = {
                                     unitTara += Number(e.tara)
                                     unitNetto += Number(e.netto)
                                     unitMatiAfkir += Number(e.mati_afkir)
+                                    unitSisaEkor += Number(e.ayam)
                                     unitPresentase += Number(e.presentase)
                                     unit100kg += Number(e['100/kg'])
                                     unitFcr += Number(e.fcr)
@@ -294,7 +286,7 @@ module.exports = {
                                 unitFcr = unitFcr/unitCount
 
                                 const sqlTotalLocation = `UPDATE kandang."location" SET 
-                                jumlah_butir = '${unitJumlahButir}', tray = '${unitTray}', kg = '${unitKg}', tara = '${unitTara.toFixed(2)}', netto = '${unitNetto.toFixed(2)}', mati_afkir = '${unitMatiAfkir}', 
+                                jumlah_butir = '${unitJumlahButir}', tray = '${unitTray}', kg = '${unitKg.toFixed(2)}', tara = '${unitTara.toFixed(2)}', netto = '${unitNetto.toFixed(2)}', mati_afkir = '${unitMatiAfkir}', 
                                 ayam = '${unitSisaEkor}', presentase = '${unitPresentase.toFixed(2)}', "100/kg" = ${unit100kg.toFixed(2)}, fcr = '${unitFcr.toFixed(2)}', pakan = '${unitPakan}', tanggal = NOW() WHERE id_location = ${data.id_location};`
 
                                 db.query(sqlTotalLocation, (err, resultTotalLocation) => {
@@ -302,7 +294,53 @@ module.exports = {
                                         res.status(500).send(err)
                                     }
 
-                                    res.status(200).send({ message: 'Input Record Success' })
+                                    const sqlGetLocation = `SELECT * FROM kandang."location" WHERE fid_owner = ${req.logedUser.id_owner} ORDER BY id_location;
+                                    SELECT COUNT(*) FROM kandang."location" WHERE fid_owner = ${req.logedUser.id_owner};`
+
+                                    db.query(sqlGetLocation, (err, resultLocation) => {
+                                        if(err) {
+                                            res.status(500).send(err)
+                                        }
+            
+                                        var location = resultLocation[0].rows 
+                                        var locationCount = resultLocation[1].rows[0].count
+
+                                        var locationJumlahButir = 0 
+                                        var locationKg = 0
+                                        var locationTray = 0
+                                        var locationTara = 0
+                                        var locationNetto = 0
+                                        var locationMatiAfkir = 0
+                                        var locationSisaEkor = 0
+                                        var locationPresentase = 0
+                                        var location100kg = 0
+                                        var locationFcr = 0
+                                        var locationPakan = 0
+                                        
+                                        location.forEach(e => {
+                                            locationJumlahButir += Number(e.jumlah_butir)
+                                            locationKg += Number(e.kg)
+                                            locationTray += Number(e.tray)
+                                            locationTara += Number(e.tara)
+                                            locationNetto += Number(e.netto)
+                                            locationMatiAfkir += Number(e.mati_afkir)
+                                            locationPresentase += Number(e.presentase)
+                                            location100kg += Number(e['100/kg'])
+                                            locationFcr += Number(e.fcr)
+                                            locationPakan += Number(e.pakan)
+                                        })
+                                        locationPresentase = locationPresentase/rowCount
+                                        location100kg = location100kg.toFixed(2)/rowCount
+                                        locationFcr = locationFcr/rowCount
+
+                                        const sqlTotalOwner = `UPDATE humanResource."owner" SET 
+                                        jumlah_butir = '${locationJumlahButir}', tray = '${locationTray}', kg = '${locationKg.toFixed(2)}', tara = '${locationTara.toFixed(2)}', netto = '${locationNetto.toFixed(2)}', 
+                                        mati_afkir = '${locationMatiAfkir}', ayam = '${locationSisaEkor}', presentase = '${locationPresentase.toFixed(2)}', 
+                                        "100/kg" = ${location100kg.toFixed(2)}, fcr = '${locationFcr.toFixed(2)}', pakan = '${locationPakan}', 
+                                        tanggal = NOW() WHERE id_owner = ${req.logedUser.id_owner};`
+
+                                        res.status(200).send({ message: 'Input Record Success' })
+                                    })
                                 })
                             })
                         })
