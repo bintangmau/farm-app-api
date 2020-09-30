@@ -404,43 +404,79 @@ module.exports = {
                 res.status(500).send(err)
             }
      
-            var ownerAyam = resultGet[0].rows[0].ayam
-            var ownerPakan = resultGet[0].rows[0].pakan
-            var locationAyam = resultGet[1].rows[0].ayam
-            var locationPakan = resultGet[1].rows[0].pakan
-            var unitAyam = resultGet[2].rows[0].ayam
-            var unitPakan = resultGet[2].rows[0].pakan
-            var rowsAyam = resultGet[3].rows[0].ayam
-            var rowsPakan = resultGet[3].rows[0].pakan
+            var ownerAyam = Number(resultGet[0].rows[0].ayam)
+            var ownerPakan = Number(resultGet[0].rows[0].pakan)
+            var locationAyam = Number(resultGet[1].rows[0].ayam)
+            var locationPakan = Number(resultGet[1].rows[0].pakan)
+            var unitAyam = Number(resultGet[2].rows[0].ayam)
+            var unitPakan = Number(resultGet[2].rows[0].pakan)
+            var rowsAyam = Number(resultGet[3].rows[0].ayam)
+            var rowsPakan = Number(resultGet[3].rows[0].pakan)
 
-            var ayamOpr = '+'
-            var pakanOpr = '+'
+            var ayam = Number(req.body.ayam)
+            var pakan = Number(req.body.pakan)
 
-            var ayam = req.body.ayam
-            var pakan = req.body.pakan
-
-            if(rowsAyam < ayam) {
-                
-            } else {
-                ayamOpr = '-'
+            var ownerAyamRes = 0
+            var ownerPakanRes = 0
+            var locationAyamRes = 0
+            var locationPakanRes = 0
+            var unitAyamRes = 0
+            var unitPakanRes = 0
+            var rowsAyamRes = 0
+            var rowsPakanRes = 0
+        
+            if(rowsAyam === 0) {
+                rowsAyamRes = ayam    
+            } 
+            if(rowsPakan === 0) {
+                rowsPakanRes = pakan
             }
-
-            // ownerAyam = ownerAyam + ayamOpr + ayam
-            ownerAyam = rowsAyam < ayam ? Number(ownerAyam) + Number(ayam) :  Number(ownerAyam) - Number(ayam)  
-            ownerPakan = ownerPakan + pakan
-            locationAyam = locationAyam + ayam
-            locationPakan = locationPakan + pakan
-            unitAyam = unitAyam + ayam
-            unitPakan = unitPakan + ayam
-
-            console.log(rowsAyam)
-            console.log(rowsPakan)
-
-            console.log(ayam, pakan, "NEW VALUE")
-
-            console.log(ownerAyam)
-            const sql = `UPDATE kandang."rows" SET ayam = '${req.body.ayam}', pakan = '${req.body.pakan}'
-            WHERE id_rows = ${req.body.id_rows};`   
+            if(unitAyam === 0) {
+                unitAyamRes = ayam
+            } 
+            if(unitPakan === 0) {
+                unitPakanRes = pakan
+            }
+            if(locationAyam === 0) {
+                locationAyamRes = ayam
+            }
+            if(locationPakan === 0) {
+                locationPakanRes = pakan
+            }
+            if(ownerAyam === 0) {
+                ownerAyamRes = ayam
+            }
+            if(ownerPakan === 0) {
+                ownerPakanRes = pakan
+            } else if(rowsAyam < ayam) {
+                ownerAyamRes = (ownerAyam - ayam) + ayam
+                locationAyamRes = locationAyam + ayam 
+                unitAyamRes = (unitAyam - ayam) + ayam
+            } else if(rowsAyam > ayam) {
+                ownerAyamRes = ownerAyam - ayam
+                locationAyamRes = locationAyam - ayam 
+                unitAyamRes = unitAyam - ayam
+            } else if(rowsPakan < pakan) {
+                ownerPakanRes = ownerPakan + pakan
+                locationPakanRes = locationPakan + pakan 
+                unitPakanRes = unitPakan + pakan
+            } else if(rowsPakan > pakan) {
+                ownerPakanRes = ownerPakan - pakan
+                locationPakanRes = locationPakan - pakan 
+                unitPakanRes = unitPakan - pakan
+            }
+          
+            const sql = `UPDATE kandang."rows" SET ayam = '${ayam}', pakan = '${pakan}'
+            WHERE id_rows = ${req.body.id_rows};
+            
+            UPDATE kandang."unit" SET ayam = '${unitAyamRes}', pakan = '${unitPakanRes}'
+            WHERE id_unit = ${req.body.id_unit};
+            
+            UPDATE kandang."location" SET ayam = '${locationAyamRes}', pakan = '${locationPakanRes}'
+            WHERE id_location = ${req.body.id_location};
+            
+            UPDATE "humanResource"."owner" SET ayam = '${ownerAyamRes}', pakan = '${ownerPakanRes}'
+            WHERE id_owner = ${req.logedUser.id_owner};`   
            
             db.query(sql, (err, results) => {
                 if(err) {
