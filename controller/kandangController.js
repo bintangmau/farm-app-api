@@ -351,18 +351,26 @@ module.exports = {
                                             location100kg += Number(e['100/kg'])
                                             locationFcr += Number(e.fcr)
                                             locationPakan += Number(e.pakan)
+                                            locationSisaEkor += Number(e.ayam)
                                         })
                                         locationPresentase = locationPresentase/rowCount
                                         location100kg = location100kg.toFixed(2)/rowCount
                                         locationFcr = locationFcr/rowCount
 
-                                        const sqlTotalOwner = `UPDATE humanResource."owner" SET 
+                                        const sqlTotalOwner = `UPDATE "humanResource"."owner" SET 
                                         jumlah_butir = '${locationJumlahButir}', tray = '${locationTray}', kg = '${locationKg.toFixed(2)}', tara = '${locationTara.toFixed(2)}', netto = '${locationNetto.toFixed(2)}', 
                                         mati_afkir = '${locationMatiAfkir}', ayam = '${locationSisaEkor}', presentase = '${locationPresentase.toFixed(2)}', 
                                         "100/kg" = ${location100kg.toFixed(2)}, fcr = '${locationFcr.toFixed(2)}', pakan = '${locationPakan}', 
                                         tanggal = NOW() WHERE id_owner = ${req.logedUser.id_owner};`
+                                        
+                                        db.query(sqlTotalOwner, (err, resultTotalOwner) => {
+                                            if(err) {
+                                                console.log(err)
+                                                res.status(500).send(err)
+                                            }
 
-                                        res.status(200).send({ message: 'Input Record Success' })
+                                            res.status(200).send({ message: 'Input Record Success' })
+                                        })
                                     })
                                 })
                             })
@@ -393,158 +401,110 @@ module.exports = {
             res.status(200).send(response)
         })
     },
-    editAyamPakanRows: (req, res) => {
-        const sqlGet = `SELECT ayam, pakan FROM "humanResource"."owner" WHERE id_owner = ${req.logedUser.id_owner};
-                        SELECT ayam, pakan FROM kandang."location" WHERE id_location = ${req.body.id_location};
-                        SELECT ayam, pakan FROM kandang.unit WHERE id_unit = ${req.body.id_unit};
-                        SELECT ayam, pakan FROM kandang."rows" WHERE id_rows = ${req.body.id_rows};`
-
-        db.query(sqlGet, (err, resultGet) => {
-            if(err) {
-                res.status(500).send(err)
-            }
-            console.log(req.body.id_location, "ID LOC")
-            console.log(req.body.id_unit, "ID UNIT")
-            var ownerAyam = Number(resultGet[0].rows[0].ayam)
-            var ownerPakan = Number(resultGet[0].rows[0].pakan)
-            var locationAyam = Number(resultGet[1].rows[0].ayam)
-            var locationPakan = Number(resultGet[1].rows[0].pakan)
-            var unitAyam = Number(resultGet[2].rows[0].ayam)
-            var unitPakan = Number(resultGet[2].rows[0].pakan)
-            var rowsAyam = Number(resultGet[3].rows[0].ayam)
-            var rowsPakan = Number(resultGet[3].rows[0].pakan)
-            console.log(ownerAyam, "OWNER AYAM")
-            console.log(locationAyam, "LOcC AYAM")
-            console.log(unitAyam, "UNIT AYAM")
-            console.log(rowsAyam, "ROWS AYAM")
-            var ayam = Number(req.body.ayam)
-            var pakan = Number(req.body.pakan)
-
-            var ownerAyamRes = 0
-            var ownerPakanRes = 0
-            var locationAyamRes = 0
-            var locationPakanRes = 0
-            var unitAyamRes = 0
-            var unitPakanRes = 0
-            var rowsAyamRes = 0
-            var rowsPakanRes = 0
-            
-            if(rowsAyam === 0) {
-                rowsAyamRes = ayam
-                console.log(`rowsAyamRes = ${rowsAyam}`)    
-            } 
-            if(rowsPakan === 0) {
-                rowsPakanRes = pakan
-                console.log(`rowsPakanRes = ${rowsPakan}`)
-            }
-            if(unitAyam === 0) {
-                unitAyamRes = ayam
-                console.log(`unitAyamRes = ${unitAyam}`)
-            } 
-            if(unitPakan === 0) {
-                unitPakanRes = pakan
-                console.log(`unitPakanRes = ${unitPakan}`)
-            }
-            if(locationAyam === 0) {
-                locationAyamRes = ayam
-                console.log(`locationAyamRes = ${locationAyam}`)
-            }
-            if(locationPakan === 0) {
-                locationPakanRes = pakan
-                console.log(`LocationPakanRes = ${locationPakan}`)
-            }
-            if(ownerAyam === 0) {
-                ownerAyamRes = ayam
-                console.log(`ownerAyamRes = ${ownerAyam}`)
-            }
-            if(ownerPakan === 0) {
-                ownerPakanRes = pakan
-                console.log(`ownerPakanRes ${ownerPakan}`)
-            } 
-            if(rowsAyam < ayam) {
-                unitAyamRes = (unitAyam - unitAyam) + ayam
-                locationAyamRes = (locationAyam - unitAyamRes) + ayam 
-                ownerAyamRes = (ownerAyam - locationAyamRes) + ayam
-                console.log(`ayam tambah value`)
-            } else if(rowsAyam > ayam) {
-                ownerAyamRes = ownerAyam - ayam
-                locationAyamRes = locationAyam - ayam 
-                unitAyamRes = unitAyam - ayam
-                console.log(`ayam kurang value`)
-            } else if(rowsPakan < pakan) {
-                ownerPakanRes = ownerPakan + pakan
-                locationPakanRes = locationPakan + pakan 
-                unitPakanRes = unitPakan + pakan
-                console.log(`pakan tambah value`)
-            } else if(rowsPakan > pakan) {
-                ownerPakanRes = ownerPakan - pakan
-                locationPakanRes = locationPakan - pakan 
-                unitPakanRes = unitPakan - pakan
-                console.log(`pakan kurang value`)
-            }
-          
-            const sql = `UPDATE kandang."rows" SET ayam = '${ayam}', pakan = '${pakan}'
-            WHERE id_rows = ${req.body.id_rows};
-            
-            UPDATE kandang."unit" SET ayam = '${unitAyamRes}', pakan = '${unitPakanRes}'
-            WHERE id_unit = ${req.body.id_unit};
-            
-            UPDATE kandang."location" SET ayam = '${locationAyamRes}', pakan = '${locationPakanRes}'
-            WHERE id_location = ${req.body.id_location};
-            
-            UPDATE "humanResource"."owner" SET ayam = '${ownerAyamRes}', pakan = '${ownerPakanRes}'
-            WHERE id_owner = ${req.logedUser.id_owner};`   
-           
-            db.query(sql, (err, results) => {
-                if(err) {
-                    res.status(500).send(err)
-                } 
-              
-                res.status(200).send({ message: "Edit Ayam Pakan Success" })
-            })
-        })
-    },
     editAyamPakan2: (req, res) => {
-        const sqlEditRows = `UPDATE kandang."rows" SET ayam = '${req.body.ayam}', pakan = '${req.body.pakan}'
-        WHERE id_rows = ${req.body.id_rows};`
+        const sqlGetDataRowsOld = `SELECT ayam, pakan FROM kandang."rows" WHERE id_rows = ${req.body.id_rows};`
 
-        db.query(sqlEditRows, (err, results) => {
+        db.query(sqlGetDataRowsOld, (err, resultOldRows) => {
             if(err) {
                 res.status(500).send(err)
             }
+            
+            var oldRowsAyam = Number(resultOldRows.rows[0].ayam)
+            var oldRowsPakan = Number(resultOldRows.rows[0].pakan)
 
-            const sqlGetUnit = `SELECT ayam, pakan FROM kandang.unit WHERE id_unit = ${req.body.id_unit};`
+                const sqlEditRows = `UPDATE kandang."rows" SET ayam = '${req.body.ayam}', pakan = '${req.body.pakan}'
+                WHERE id_rows = ${req.body.id_rows};`
 
-            db.query(sqlGetUnit, (err, resultUnit) => {
-                if(err) {
+                db.query(sqlEditRows, (err, results) => {
+                    if(err) {
                     res.status(500).send(err)
                 }
-                var ayam = Number(req.body.ayam)
-                var pakan = Number(req.body.pakan)
-                var ayamUnit = Number(resultUnit.rows[0].ayam)
-                var pakanUnit = Number(resultUnit.rows[0].pakan)
-
-                if(ayamUnit === 0) {
-                    ayamUnit = ayam
-                    console.log(ayamUnit)
-                    console.log(ayam, "NOL")
-                } else if(ayamUnit > 0 ) {
-                    console.log(ayamUnit)
-                    console.log(ayam)
-                    // ayamUnit = ayamUnit - ayamUnit
-                }
-                const sqlEditUnit = ` UPDATE kandang."unit" SET ayam = '${ayamUnit}', pakan = '${pakan}'
-                WHERE id_unit = ${req.body.id_unit};`
-
-                db.query(sqlEditUnit, (err, resultEditUnit) => {
+                    
+                const sqlGetUnit = `SELECT ayam, pakan FROM kandang.unit WHERE id_unit = ${req.body.id_unit};`
+                
+                db.query(sqlGetUnit, (err, resultUnit) => {
                     if(err) {
                         res.status(500).send(err)
                     }
+                    var ayam = Number(req.body.ayam)
+                    var pakan = Number(req.body.pakan)
+                    var ayamUnit = Number(resultUnit.rows[0].ayam)
+                    var pakanUnit = Number(resultUnit.rows[0].pakan)
+                    
+                    if(ayamUnit === 0) {
+                        ayamUnit = ayam
+                    } else if(ayamUnit > 0 ) {``
+                        ayamUnit = (ayamUnit - oldRowsAyam) + ayam
+                    }
+                    if(pakanUnit === 0) {
+                        pakanUnit = pakan
+                    } else if(pakanUnit > 0) {
+                        pakanUnit = (pakanUnit - oldRowsPakan) + pakan
+                    }
 
-                    res.status(200).send({ message: "edit ayam pakan success"})
+                    const sqlEditUnit = `UPDATE kandang."unit" SET ayam = '${ayamUnit}', pakan = '${pakanUnit}'
+                    WHERE id_unit = ${req.body.id_unit};`
+                    
+                    db.query(sqlEditUnit, (err, resultEditUnit) => {
+                        if(err) {
+                            res.status(500).send(err)
+                        }
+
+                        const sqlGetDataUnitOld = `SELECT ayam, pakan FROM kandang."unit" WHERE fid_location = ${req.body.id_location}`
+
+                        db.query(sqlGetDataUnitOld, (err, resultUnitOld) => {
+                            if(err) {
+                                res.status(500).send(err)
+                            }
+                            var totalUnitAyamToLoc = 0
+                            var totalUnitPakanToLoc = 0
+                            var resultDataUnit = resultUnitOld.rows
+
+                            resultDataUnit.forEach(e => {
+                                totalUnitAyamToLoc += Number(e.ayam)
+                                totalUnitPakanToLoc += Number(e.pakan)
+                            })
+
+                            const sqlEditLocation = `UPDATE kandang."location" SET ayam = '${totalUnitAyamToLoc}', pakan = '${totalUnitPakanToLoc}'
+                            WHERE id_location = ${req.body.id_location};`
+
+                            db.query(sqlEditLocation, (err, resultEditLoc) => {
+                                if(err) {
+                                    res.status(500).send(err)
+                                }
+
+                                const sqlGetDataLocation = `SELECT ayam, pakan FROM kandang."location" WHERE fid_owner = ${req.logedUser.id_owner}`
+
+                                db.query(sqlGetDataLocation, (err, resultDataLoc) => {
+                                    if(err) {
+                                        res.status(500).send(err)
+                                    }
+
+                                    var dataLoc = resultDataLoc.rows
+                                    var totalAyamLoc = 0
+                                    var totalPakanLoc = 0
+                                    
+                                    dataLoc.forEach(e => {
+                                        totalAyamLoc += Number(e.ayam)
+                                        totalPakanLoc += Number(e.pakan)
+                                    })
+
+                                    const editOwnerAyamPakan = `UPDATE "humanResource"."owner" SET ayam = '${totalAyamLoc}', pakan = '${totalPakanLoc}'
+                                    WHERE id_owner = ${req.logedUser.id_owner};`
+
+                                    db.query(editOwnerAyamPakan, (err, resultEditOwner) => {
+                                        if(err) {
+                                            res.status(500).send(err)
+                                        }
+                                        
+                                        res.status(200).send({ message: "edit ayam pakan success"})
+                                    })
+                                })
+                            })
+                        })
+                    })
                 })
             })
         })
-
     }
 }
