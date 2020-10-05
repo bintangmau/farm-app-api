@@ -140,17 +140,17 @@ module.exports = {
         var data = req.body
         
         var date = new Date()
-        var tanggal = `${date.getFullYear()}/${date.getMonth()}/${date.getDate()}` 
-
+        var tanggal = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}` 
+    
         const sqlCheck = `	SELECT COUNT(*) FROM kandang.days_record_report WHERE DATE(tanggal) = '${tanggal}'  
         AND fid_owner = ${req.logedUser.id_owner} AND fid_location = ${data.id_location} AND fid_unit = ${data.id_unit} AND fid_rows = ${data.id_rows};`
-        
+
         db.query(sqlCheck, (err, resultCheck) => {
             if(err) {
                 res.status(500).send(err)
             }
             var dataCheck = Number(resultCheck.rows[0].count)
-            console.log(dataCheck) 
+
             if(dataCheck < 1) {
                 var ekor = data.ayam
                 var pakan = data.pakan
@@ -401,7 +401,7 @@ module.exports = {
                 })
 
             } else {
-                res.status(200).send({ message: "tidak diizinkan" })
+                res.status(404).send({ message: "tidak diizinkan" })
             }
         })
     },
