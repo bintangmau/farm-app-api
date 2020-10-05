@@ -15,14 +15,13 @@ module.exports = {
             if(err) {
                 res.status(500).send(err)
             } 
-            var message = ''
             var tokens = ''
 
             if(results.rows.length < 1) {
-                message = "Data tidak ada"
+                res.status(404).send({ message: "Akun Belum terdaftar" })
             } else {
                 tokens = createJWTToken(results.rows[0], { message: 'token' })
-                message = "Login Success"
+                var message = "Login Success"
             }
 
             var response = {
@@ -48,19 +47,17 @@ module.exports = {
             } 
             
             var count = Number(results.rows[0].count)
-            var message = ""
-            console.log(sql2)
+            
             if(count < 1) {
                 db.query(sql2, (err, results2) => {
                     if(err) {
                         res.status(500).send(err)
                     } 
-                    message = "Register Success"
+                    var message = "Register Success"
                     res.status(200).send({ message })
                 })
             } else {
-                message = "Username Used!"
-                res.status(200).send({ message })
+                res.status(404).send({ message: "Account Used" })
             }
         
         })
