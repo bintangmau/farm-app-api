@@ -16,5 +16,6 @@ router.post('/delete-rows/:id_rows', authentication, kandangController.deleteRow
 router.post('/add-days-record-report', authentication, kandangController.addDaysRecordReport)
 router.get('/get-days-record-report/:id_rows', authentication, kandangController.getDaysRecordReport)
 router.post('/edit-ayam-pakan-rows', authentication, kandangController.editAyamPakan2)
+router.get('/get-data-owner-kandang', authentication, kandangController.getDataOwnerKandang)
 
 module.exports = router

@@ -15,12 +15,13 @@ module.exports = {
     addLocation: (req, res) => {
         const sql = `INSERT INTO kandang."location" (fid_owner, location_name)
         VALUES (${req.logedUser.id_owner}, '${req.body.location_name}');`
-
+        console.log(req.body)
         db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
             } 
 
+            req.app.io.emit('add-location-kandang' , { message : 'sukses' }) 
             res.status(200).send({ message: 'Add Location Success' })
         })
     },
@@ -56,6 +57,7 @@ module.exports = {
                 res.status(500).send(err)
             } 
 
+            req.app.io.emit('add-unit-kandang' , { message : 'sukses' }) 
             res.status(200).send({ message: 'Add Unit Success' })
         })
     },
@@ -94,6 +96,7 @@ module.exports = {
                 res.status(500).send(err)
             } 
 
+            req.app.io.emit('add-rows-kandang' , { message : 'sukses' }) 
             res.status(200).send({ message: "Add Rows Success" })
         })
     },
@@ -105,6 +108,7 @@ module.exports = {
                 res.status(500).send(err)
             } 
 
+            req.app.io.emit('delete-location-kandang' , { message : 'sukses' }) 
             res.status(200).send({ message: 'Delete Location Success' })
         })
     },
@@ -116,6 +120,7 @@ module.exports = {
                 res.status(500).send(err)
             } 
 
+            req.app.io.emit('delete-unit-kandang' , { message : 'sukses' }) 
             res.status(200).send({ message: 'Delete Unit Success' })
         })
     },
@@ -127,6 +132,7 @@ module.exports = {
                 res.status(500).send(err)
             } 
 
+            req.app.io.emit('delete-rows-kandang' , { message : 'sukses' }) 
             res.status(200).send({ message: 'Delete Rows Success' })
         })
     },
@@ -369,6 +375,7 @@ module.exports = {
                                                 res.status(500).send(err)
                                             }
 
+                                            req.app.io.emit('input-days-record-kandang' , { message : 'sukses' }) 
                                             res.status(200).send({ message: 'Input Record Success' })
                                         })
                                     })
@@ -497,6 +504,7 @@ module.exports = {
                                             res.status(500).send(err)
                                         }
                                         
+                                        req.app.io.emit('edit-ayam-pakan' , { message : 'sukses' }) 
                                         res.status(200).send({ message: "edit ayam pakan success"})
                                     })
                                 })
@@ -506,5 +514,25 @@ module.exports = {
                 })
             })
         })
+    },
+    getDataOwnerKandang: (req, res) => {
+        const sql = `SELECT * FROM "humanResource"."owner" WHERE id_owner = ${req.logedUser.id_owner};
+                    SELECT COUNT(*) FROM kandang."location" WHERE fid_owner = 1;
+                    SELECT COUNT(*) FROM kandang.unit WHERE fid_owner = 1;`
+
+        db.query(sql, (err, results) => {
+            if(err) {
+                res.status(500).send(err)
+            }   
+
+            const response = {
+                data: results[0].rows,
+                countLocation: results[1].rows[0].count,
+                countUnit: results[2].rows[0].count
+            }
+
+            res.status(200).send(response)
+        })
+
     }
 }
