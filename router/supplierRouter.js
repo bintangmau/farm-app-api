@@ -5,5 +5,7 @@ const { authentication } = require('../helper/middleware/auth')
 const router = express.Router()
 
 router.post('/add-new-supplier', authentication, supplierController.addNewSupplier)
+router.get('/get-data-supplier', authentication, supplierController.getDataSupplier)
+router.post('/edit-data-supplier', authentication, supplierController.editSupplier)
 
 module.exports = router
