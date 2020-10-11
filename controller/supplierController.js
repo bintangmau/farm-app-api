@@ -38,5 +38,20 @@ module.exports = {
             req.app.io.emit('edit-supplier-toko' , { message : 'sukses' }) 
             res.status(200).send({ message: 'edit success' })
         })
+    },
+    searchDataSupplier: (req, res) => {
+        const sql = `SELECT * FROM toko.supplier WHERE fid_owner = ${req.logedUser.id_owner} 
+        AND LOWER(nama_supplier) LIKE LOWER ('%${req.body.keyword}%') 
+        OR LOWER(alamat_supplier) LIKE LOWER('%${req.body.keyword}%')
+        OR LOWER(nomor_supplier) LIKE LOWER('%${req.body.keyword}%')
+        ORDER BY id_supplier;`
+
+        db.query(sql, (err, results) => {
+            if(err) {
+                res.status(500).send(err)
+            }
+
+            res.status(200).send(results.rows)
+        })
     }
 }
