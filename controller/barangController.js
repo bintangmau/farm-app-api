@@ -110,11 +110,24 @@ module.exports = {
         VALUES (${req.logedUser.id_owner}, ${req.body.id_customer}, '{${req.body.id_item}}', ${req.body.value}, ${req.body.jumlah_item}, NOW(), '{${req.body.id_supplier}}');`
 
         const arrItem = req.body.id_item
+        const qtyArr = req.body.qty_item
+        var finalData = []
+        var messageQty = []
+        arrItem.forEach((val) => {
+            finalData.push({idItem: val})
+        })
+        qtyArr.forEach((val, idx) => {
+            finalData[idx].qty = val
+        })
+        finalData.map((val) => {
+            const sqlEditQtyItem = `UPDATE toko.barang SET jumlah_barang = jumlah_barang - ${val.qty} WHERE id_barang = ${val.idItem};`
 
-        // arrItem.map((val) => {
-        //     console.log(val)
-        //     const sqlEditQtyItem = `UPDATE toko.barang SET jumlah_barang = 1 WHERE id_barang = 1;`
-        // })
+            db.query(sqlEditQtyItem, (err, resultEditQty) => {
+                if(err) {
+                    messageQty.push({err})
+                } 
+            })
+        })
         db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
