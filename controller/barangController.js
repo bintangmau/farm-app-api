@@ -4,8 +4,13 @@ module.exports = {
     addNewBarang: (req, res) => {
         var data = req.body
 
+        const minIncome = Number(data.harga_barang) * Number(data.jumlah_barang)
+
         const sql = `INSERT INTO toko.barang ("nama_barang", "jumlah_barang", "harga_barang", "satuan_barang", "fid_supplier", "fid_owner")
-        VALUES ('${data.nama_barang}', ${data.jumlah_barang}, ${data.harga_barang}, '${data.satuan_barang}', ${data.id_supplier}, ${req.logedUser.id_owner});`
+        VALUES ('${data.nama_barang}', ${data.jumlah_barang}, ${data.harga_barang}, '${data.satuan_barang}', ${data.id_supplier}, ${req.logedUser.id_owner});
+        
+        UPDATE "humanResource"."owner" SET saldo = saldo - ${minIncome}
+        WHERE id_owner = ${req.logedUser.id_owner};`
 
         db.query(sql, (err, results) => {
             if(err) {
@@ -21,14 +26,25 @@ module.exports = {
                 FROM toko.barang b 
                 JOIN toko.supplier s
                 ON b.fid_supplier = s.id_supplier
-                WHERE b.fid_owner = ${req.logedUser.id_owner} ORDER BY id_barang;`
+                WHERE b.fid_owner = ${req.logedUser.id_owner} ORDER BY id_barang;
+
+                SELECT value FROM toko.sales WHERE fid_owner = ${req.logedUser.id_owner};`
 
         db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
             }
+            var income = 0
+            results[1].rows.forEach((val) => {
+                income += Number(val.value)
+            })
 
-            res.status(200).send(results.rows)
+            const response = {
+                data: results[0].rows,
+                income
+            }
+
+            res.status(200).send(response)
         })
     },
     getListSupplier: (req, res) => {
@@ -110,8 +126,10 @@ module.exports = {
     },
     checkOut: (req, res) => {
         const sql = `INSERT INTO toko.sales (fid_owner, fid_customer, fid_item, value, jumlah_item, tanggal, fid_supplier)
-        VALUES (${req.logedUser.id_owner}, ${req.body.id_customer}, '{${req.body.id_item}}', ${req.body.value}, ${req.body.jumlah_item}, NOW(), '{${req.body.id_supplier}}');`
-
+        VALUES (${req.logedUser.id_owner}, ${req.body.id_customer}, '{${req.body.id_item}}', ${req.body.value}, ${req.body.jumlah_item}, NOW(), '{${req.body.id_supplier}}');
+        
+        UPDATE "humanResource"."owner" SET saldo = saldo + ${req.body.value}
+        WHERE id_owner = ${req.logedUser.id_owner};`
         const arrItem = req.body.id_item
         const qtyArr = req.body.qty_item
         var finalData = []
@@ -142,21 +160,28 @@ module.exports = {
         })        
     },
     getDataSales: (req, res) => {
-        const sqlGet = `SELECT id_sales, fid_owner, fid_customer, fid_item, "value", jumlah_item, tanggal, fid_supplier
-        FROM toko.sales  WHERE fid_owner = ${req.logedUser.id_owner};
+        const sqlGet = `SELECT id_sales, s.fid_owner, fid_customer, "value", jumlah_item, tanggal, c.customer_name, c.customer_address
+                FROM toko.sales s 
+				JOIN toko.customer c
+				ON s.fid_customer = c.id_customer
+				WHERE s.fid_owner = ${req.logedUser.id_owner}
+                ORDER BY id_sales DESC;
         
         SELECT s.id_sales, nama_barang
         FROM toko.sales s 
         JOIN toko.barang b
         ON b.id_barang =  ANY (s.fid_item) WHERE s.id_sales = ANY(
-            SELECT id_sales FROM toko.sales WHERE fid_owner = ${req.logedUser.id_owner});
+            SELECT id_sales FROM toko.sales WHERE fid_owner = ${req.logedUser.id_owner})
+            ORDER BY s.id_sales DESC;
             
         SELECT s.id_sales, nama_supplier
         FROM toko.sales s 
         JOIN toko.supplier p
         ON p.id_supplier =  ANY (s.fid_supplier) WHERE s.id_sales = ANY(
-            SELECT id_sales FROM toko.sales WHERE fid_owner = ${req.logedUser.id_owner});`
+            SELECT id_sales FROM toko.sales WHERE fid_owner = ${req.logedUser.id_owner})
+            ORDER BY s.id_sales DESC;`
 
+        // console.log(sqlGet)
         db.query(sqlGet, (err, resultGet) => {
             if(err) {
                 res.status(500).send(err)

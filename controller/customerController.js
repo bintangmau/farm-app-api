@@ -30,12 +30,12 @@ module.exports = {
     searchCustomer: (req, res) => {
 
         const {
-            name,address
+            keyword
         } = req.body
 
-        const sql = `SELECT * FROM  toko.customer WHERE fid_owner = ${req.logedUser.id_owner} 
-                    AND LOWER(customer_name) LIKE LOWER('%${name}%') 
-                    OR LOWER(customer_address) LIKE LOWER('%${address}%');`
+        const sql = `SELECT id_customer, customer_name FROM toko.customer WHERE fid_owner = ${req.logedUser.id_owner} 
+                    AND LOWER(customer_name) LIKE LOWER('%${keyword}%') 
+                    OR LOWER(customer_address) LIKE LOWER('%${keyword}%');`
 
         db.query(sql ,(err,results)=>{
             if(err) {
