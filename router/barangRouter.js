@@ -13,5 +13,9 @@ router.post('/search-data-barang', authentication, barangController.searchDataBa
 router.get('/count-in-toko', authentication, getCountInToko)
 router.post('/check-out', authentication, barangController.checkOut)
 router.get('/get-data-sales', authentication, barangController.getDataSales)
+router.post('/edit-harga-telur', authentication, barangController.editHargaTelur)
+router.post('/get-data-barang-by-supplier', authentication, barangController.getDataBarangBySupplier)
+router.post('/plus-jumlah-barang', authentication, barangController.plusJumlahBarang)
+router.delete('/delete-barang/:id', authentication, barangController.deleteBarang)
 
 module.exports = router

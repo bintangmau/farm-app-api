@@ -26,9 +26,11 @@ module.exports = {
                 FROM toko.barang b 
                 JOIN toko.supplier s
                 ON b.fid_supplier = s.id_supplier
-                WHERE b.fid_owner = ${req.logedUser.id_owner} ORDER BY id_barang;
+                WHERE b.fid_owner = ${req.logedUser.id_owner} ORDER BY id_barang DESC; 
 
-                SELECT value FROM toko.sales WHERE fid_owner = ${req.logedUser.id_owner};`
+                SELECT value FROM toko.sales WHERE fid_owner = ${req.logedUser.id_owner};
+                
+                SELECT id_owner, jumlah_butir, kg, harga_telur FROM "humanResource"."owner" WHERE id_owner = ${req.logedUser.id_owner};`
 
         db.query(sql, (err, results) => {
             if(err) {
@@ -41,7 +43,8 @@ module.exports = {
 
             const response = {
                 data: results[0].rows,
-                income
+                income,
+                telur: results[2].rows
             }
 
             res.status(200).send(response)
@@ -59,9 +62,25 @@ module.exports = {
         })
     },
     editDataBarang: (req, res) => {
+        // var data = req.body
+        // var operator = ''
+        // var count = 0
+        // if(data.jumlah_old > data.jumlah) {
+        //     count = data.jumlah_old - data.jumlah
+        //     operator = '-'
+        // } else if(data.jumlah > data.jumlah_old) {
+        //     count = data.jumlah - data.jumlah_old
+        //     operator = '+'
+        // }
+
+        // var price = data.harga * count
         const sql = `UPDATE toko.barang SET harga_barang = ${req.body.harga}, jumlah_barang = ${req.body.jumlah}, 
         satuan_barang = '${req.body.satuan}' WHERE id_barang = ${req.body.id_barang};`
-
+         
+        // `UPDATE "humanResource"."owner"
+        // SET saldo = saldo ${operator} ${price}
+        // WHERE id_owner = ${req.logedUser.id_owner};`
+        // console.log(sql)
         db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
@@ -93,7 +112,7 @@ module.exports = {
                     SELECT COUNT(*) FROM toko.supplier WHERE fid_owner = ${req.logedUser.id_owner};
                     SELECT ownername FROM "humanResource"."owner" WHERE id_owner = ${req.logedUser.id_owner};
                     SELECT COUNT(*) FROM toko.sales WHERE fid_owner = ${req.logedUser.id_owner};
-                    SELECT value FROM toko.sales WHERE fid_owner = ${req.logedUser.id_owner};
+                    SELECT saldo FROM "humanResource"."owner" WHERE id_owner = ${req.logedUser.id_owner};
                     SELECT COUNT(*) FROM toko.customer WHERE fid_owner = ${req.logedUser.id_owner};`
 
         db.query(sql, (err, results) => {
@@ -106,11 +125,7 @@ module.exports = {
             var ownerName = results[2].rows[0].ownername 
             var cSales = results[3].rows[0].count
             var cCustomer = results[5].rows[0].count
-            var income = 0
-
-            results[4].rows.forEach((val) => {
-                income += Number(val.value)
-            })
+            var saldo = results[4].rows[0].saldo 
 
             const response = {
                 barang: cBarang,
@@ -118,7 +133,7 @@ module.exports = {
                 owner: ownerName,
                 sales: cSales,
                 customer: cCustomer,
-                income
+                income: saldo
             }
 
             res.status(200).send(response)
@@ -220,6 +235,64 @@ module.exports = {
             })
 
             res.status(200).send(sales)            
+        })
+    },
+    editHargaTelur: (req, res) => {
+        const sql = `UPDATE "humanResource"."owner" 
+                    SET harga_telur = ${req.body.harga_telur}
+                    WHERE id_owner = ${req.logedUser.id_owner};`
+
+        db.query(sql, (err, results) => {
+            if(err) {
+                res.status(500).send(err)
+            }
+
+            req.app.io.emit('edit-harga-telur' , { message : 'sukses' }) 
+            res.status(200).send(results.rows)
+        })
+    },
+    getDataBarangBySupplier: (req, res) => {
+        const sql = `SELECT b.id_barang, b.nama_barang, b.harga_barang, b.jumlah_barang, b.satuan_barang FROM toko.barang b
+                    JOIN toko.supplier s
+                    ON b.fid_supplier = s.id_supplier
+                    WHERE b.fid_supplier = ${req.body.id_supplier};`
+
+        db.query(sql, (err, results) => {
+            if(err) {
+                res.status(500).send(err)
+            }
+
+            res.status(200).send(results.rows)
+        })
+    },
+    plusJumlahBarang: (req, res) => {
+        const sql = `UPDATE toko.barang 
+                    SET jumlah_barang = jumlah_barang + ${req.body.value}
+                    WHERE id_barang = ${req.body.id_barang};
+                    
+                    UPDATE "humanResource"."owner"
+                    SET saldo = saldo - ${req.body.total}
+                    WHERE id_owner = ${req.logedUser.id_owner};`
+
+        db.query(sql, (err, results) => {
+            if(err) {
+                res.status(500).send(err)
+            }
+
+            req.app.io.emit('plus-jumlah-barang' , { message : 'sukses' }) 
+            res.status(200).send({ message: "edit success" })
+        })
+    },
+    deleteBarang: (req, res) => {
+        const sql = `DELETE FROM toko.barang WHERE id_barang = ${req.params.id};`
+
+        db.query(sql, (err, results) => {
+            if(err) {
+                res.status(500).send(err)
+            }
+
+            req.app.io.emit('delete-barang' , { message : 'sukses' }) 
+            res.status(200).send({ message: "Delete Success" })
         })
     }
 }

@@ -17,8 +17,8 @@ module.exports = {
         })
     },
     getDataCustomer: (req, res) => {
-        const sql = `SELECT * FROM toko.customer WHERE fid_owner = ${req.logedUser.id_owner};`
-
+        const sql = `SELECT * FROM toko.customer WHERE fid_owner = ${req.logedUser.id_owner} ORDER BY id_customer;`
+       
         db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
