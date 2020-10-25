@@ -4,8 +4,12 @@ module.exports = {
     addNewCustomer: (req, res) => {
         const sql = `INSERT INTO toko.customer
             (customer_name, customer_address, customer_phone, join_date, fid_owner)
-        VALUES ('${req.body.name}', '${req.body.address}', '${req.body.phone}', NOW(), ${req.logedUser.id_owner});`
-        console.log(req.body)
+        VALUES ('${req.body.name}', '${req.body.address}', '${req.body.phone}', NOW(), ${req.logedUser.id_owner});
+                
+        UPDATE "humanResource"."owner"
+        SET customer_date = NOW()
+        WHERE id_owner = ${req.logedUser.id_owner};`
+
         db.query(sql, (err, results) => {
             if(err) {
                 console.log(err)

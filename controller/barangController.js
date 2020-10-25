@@ -10,6 +10,10 @@ module.exports = {
         VALUES ('${data.nama_barang}', ${data.jumlah_barang}, ${data.harga_barang}, '${data.satuan_barang}', ${data.id_supplier}, ${req.logedUser.id_owner});
         
         UPDATE "humanResource"."owner" SET saldo = saldo - ${minIncome}
+        WHERE id_owner = ${req.logedUser.id_owner};
+        
+        UPDATE "humanResource"."owner"
+        SET income_date = NOW(), item_date = NOW()
         WHERE id_owner = ${req.logedUser.id_owner};`
 
         db.query(sql, (err, results) => {
@@ -27,24 +31,24 @@ module.exports = {
                 JOIN toko.supplier s
                 ON b.fid_supplier = s.id_supplier
                 WHERE b.fid_owner = ${req.logedUser.id_owner} ORDER BY id_barang DESC; 
-
-                SELECT value FROM toko.sales WHERE fid_owner = ${req.logedUser.id_owner};
                 
-                SELECT id_owner, jumlah_butir, kg, harga_telur FROM "humanResource"."owner" WHERE id_owner = ${req.logedUser.id_owner};`
+                SELECT id_owner, jumlah_butir, kg, harga_telur FROM "humanResource"."owner" WHERE id_owner = ${req.logedUser.id_owner};
+                                
+                SELECT saldo FROM "humanResource"."owner" WHERE id_owner = ${req.logedUser.id_owner};`
 
         db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
             }
-            var income = 0
-            results[1].rows.forEach((val) => {
-                income += Number(val.value)
-            })
+            // var income = 0
+            // results[1].rows.forEach((val) => {
+            //     income += Number(val.value)
+            // })
 
             const response = {
                 data: results[0].rows,
-                income,
-                telur: results[2].rows
+                telur: results[1].rows,
+                saldo: Number(results[2].rows[0].saldo)
             }
 
             res.status(200).send(response)
@@ -113,19 +117,22 @@ module.exports = {
                     SELECT ownername FROM "humanResource"."owner" WHERE id_owner = ${req.logedUser.id_owner};
                     SELECT COUNT(*) FROM toko.sales WHERE fid_owner = ${req.logedUser.id_owner};
                     SELECT saldo FROM "humanResource"."owner" WHERE id_owner = ${req.logedUser.id_owner};
-                    SELECT COUNT(*) FROM toko.customer WHERE fid_owner = ${req.logedUser.id_owner};`
+                    SELECT COUNT(*) FROM toko.customer WHERE fid_owner = ${req.logedUser.id_owner};
+                    SELECT income_date, item_date, sales_date, supplier_date, customer_date
+                        FROM "humanResource"."owner" WHERE id_owner = ${req.logedUser.id_owner};`
 
         db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
             }
 
-            var cBarang = results[0].rows[0].count
-            var cSupplier = results[1].rows[0].count
-            var ownerName = results[2].rows[0].ownername 
-            var cSales = results[3].rows[0].count
-            var cCustomer = results[5].rows[0].count
-            var saldo = results[4].rows[0].saldo 
+            const cBarang = results[0].rows[0].count
+            const cSupplier = results[1].rows[0].count
+            const ownerName = results[2].rows[0].ownername 
+            const cSales = results[3].rows[0].count
+            const cCustomer = results[5].rows[0].count
+            const saldo = results[4].rows[0].saldo 
+            const newDate = results[6].rows[0]
 
             const response = {
                 barang: cBarang,
@@ -133,7 +140,8 @@ module.exports = {
                 owner: ownerName,
                 sales: cSales,
                 customer: cCustomer,
-                income: saldo
+                income: saldo,
+                newDate: newDate
             }
 
             res.status(200).send(response)
@@ -144,7 +152,12 @@ module.exports = {
         VALUES (${req.logedUser.id_owner}, ${req.body.id_customer}, '{${req.body.id_item}}', ${req.body.value}, ${req.body.jumlah_item}, NOW(), '{${req.body.id_supplier}}');
         
         UPDATE "humanResource"."owner" SET saldo = saldo + ${req.body.value}
+        WHERE id_owner = ${req.logedUser.id_owner};
+        
+        UPDATE "humanResource"."owner"
+        SET income_date = NOW(), sales_date = NOW()
         WHERE id_owner = ${req.logedUser.id_owner};`
+
         const arrItem = req.body.id_item
         const qtyArr = req.body.qty_item
         var finalData = []

@@ -5,7 +5,11 @@ module.exports = {
         var data = req.body
 
         const sql = `INSERT INTO toko.supplier ("nama_supplier", "alamat_supplier", "nomor_supplier", "fid_owner")
-        VALUES ('${data.nama_supplier}', '${data.alamat_supplier}', '${data.nomor_supplier}', ${req.logedUser.id_owner});`
+        VALUES ('${data.nama_supplier}', '${data.alamat_supplier}', '${data.nomor_supplier}', ${req.logedUser.id_owner});
+                
+        UPDATE "humanResource"."owner"
+        SET supplier_date = NOW()
+        WHERE id_owner = ${req.logedUser.id_owner};`
 
         db.query(sql, (err, results) => {
             if(err) {
