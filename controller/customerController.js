@@ -49,5 +49,22 @@ module.exports = {
             res.status(200).send(results.rows)
         })
 
+    },
+    searchCustomer2: (req, res) => {
+        const {
+            keyword
+        } = req.body
+
+        const sql = `SELECT * FROM toko.customer WHERE fid_owner = ${req.logedUser.id_owner} 
+                    AND LOWER(customer_name) LIKE LOWER('%${keyword}%') 
+                    OR LOWER(customer_address) LIKE LOWER('%${keyword}%');`
+
+        db.query(sql ,(err,results)=>{
+            if(err) {
+                res.status(500).send(err)
+            }
+
+            res.status(200).send(results.rows)
+        })
     }
 }

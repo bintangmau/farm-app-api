@@ -571,5 +571,18 @@ module.exports = {
 
             res.status(200).send(results.rows)
         })
+    },
+    searchDataLocation: (req, res) => {
+        const sql = `SELECT * FROM kandang."location" 
+        WHERE LOWER(location_name) LIKE LOWER('%${req.body.keyword}%')
+        AND fid_owner = ${req.logedUser.id_owner};`
+
+        db.query(sql, (err, results) => {
+            if(err) {
+                res.status(500).send(err)
+            }
+
+            res.status(200).send(results.rows)
+        })
     }
 }

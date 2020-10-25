@@ -18,5 +18,6 @@ router.get('/get-days-record-report/:id_rows', authentication, kandangController
 router.post('/edit-ayam-pakan-rows', authentication, kandangController.editAyamPakan2)
 router.get('/get-data-owner-kandang', authentication, kandangController.getDataOwnerKandang)
 router.post('/filter-record-by-date', authentication, kandangController.filterRecordByDate)
+router.post('/search-data-location', authentication, kandangController.searchDataLocation)
 
 module.exports = router
