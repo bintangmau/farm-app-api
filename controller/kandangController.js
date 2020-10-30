@@ -380,7 +380,9 @@ module.exports = {
                                                 jumlah_butir = '${locationJumlahButir}', tray = '${locationTray}', kg = '${locationKg}', tara = '${locationTara.toFixed(2)}', netto = '${locationNetto.toFixed(2)}', 
                                                 mati_afkir = '${locationMatiAfkir}', ayam = '${locationSisaEkor}', presentase = '${locationPresentase.toFixed(2)}', 
                                                 "100/kg" = ${location100kg.toFixed(2)}, fcr = '${locationFcr.toFixed(2)}', pakan = '${locationPakan}', 
-                                                tanggal = NOW() WHERE id_owner = ${req.logedUser.id_owner};`
+                                                tanggal = NOW() WHERE id_owner = ${req.logedUser.id_owner};
+                                                
+                                                UPDATE toko.barang SET jumlah_barang = ${locationKg} WHERE nama_barang = 'Telur' AND fid_owner = ${req.logedUser.id_owner};`
                                                 
                                                 db.query(sqlTotalOwner, (err, resultTotalOwner) => {
                                                     if(err) {

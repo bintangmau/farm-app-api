@@ -66,27 +66,23 @@ module.exports = {
         })
     },
     editDataBarang: (req, res) => {
-        // var data = req.body
-        // var operator = ''
-        // var count = 0
-        // if(data.jumlah_old > data.jumlah) {
-        //     count = data.jumlah_old - data.jumlah
-        //     operator = '-'
-        // } else if(data.jumlah > data.jumlah_old) {
-        //     count = data.jumlah - data.jumlah_old
-        //     operator = '+'
-        // }
-
-        // var price = data.harga * count
-        const sql = `UPDATE toko.barang SET harga_barang = ${req.body.harga}, jumlah_barang = ${req.body.jumlah}, 
-        satuan_barang = '${req.body.satuan}' WHERE id_barang = ${req.body.id_barang};`
-         
-        // `UPDATE "humanResource"."owner"
-        // SET saldo = saldo ${operator} ${price}
-        // WHERE id_owner = ${req.logedUser.id_owner};`
-        // console.log(sql)
+        const {
+            status_egg, harga, jumlah_barang, satuan, id_barang, jumlah, harga_barang
+        } = req.body
+        var sql = ``
+        if(status_egg) {
+            sql = `UPDATE toko.barang SET harga_barang = ${harga}, jumlah_barang = ${jumlah}, 
+            satuan_barang = '${satuan}' WHERE id_barang = ${id_barang};
+            
+            UPDATE "humanResource"."owner" SET kg = ${jumlah}, harga_telur = ${harga} WHERE id_owner = ${req.logedUser.id_owner};`
+        } else {
+            sql = `UPDATE toko.barang SET harga_barang = ${harga}, jumlah_barang = ${jumlah}, 
+            satuan_barang = '${satuan}' WHERE id_barang = ${id_barang};`
+        }
+      
         db.query(sql, (err, results) => {
             if(err) {
+                console.log(err)
                 res.status(500).send(err)
             }
 
@@ -148,18 +144,22 @@ module.exports = {
         })
     },
     checkOut: (req, res) => {
+        const {
+            status_egg, data_egg, id_customer, id_item, value, jumlah_item, id_supplier, qty_item
+        } = req.body
+
         const sql = `INSERT INTO toko.sales (fid_owner, fid_customer, fid_item, value, jumlah_item, tanggal, fid_supplier)
-        VALUES (${req.logedUser.id_owner}, ${req.body.id_customer}, '{${req.body.id_item}}', ${req.body.value}, ${req.body.jumlah_item}, NOW(), '{${req.body.id_supplier}}');
+        VALUES (${req.logedUser.id_owner}, ${id_customer}, '{${id_item}}', ${value}, ${jumlah_item}, NOW(), '{${id_supplier}}');
         
-        UPDATE "humanResource"."owner" SET saldo = saldo + ${req.body.value}
+        UPDATE "humanResource"."owner" SET saldo = saldo + ${value}
         WHERE id_owner = ${req.logedUser.id_owner};
         
         UPDATE "humanResource"."owner"
         SET income_date = NOW(), sales_date = NOW()
         WHERE id_owner = ${req.logedUser.id_owner};`
 
-        const arrItem = req.body.id_item
-        const qtyArr = req.body.qty_item
+        const arrItem = id_item
+        const qtyArr = qty_item
         var finalData = []
         var messageQty = []
         arrItem.forEach((val) => {
@@ -168,8 +168,16 @@ module.exports = {
         qtyArr.forEach((val, idx) => {
             finalData[idx].qty = val
         })
-        finalData.map((val) => {
-            const sqlEditQtyItem = `UPDATE toko.barang SET jumlah_barang = jumlah_barang - ${val.qty} WHERE id_barang = ${val.idItem};`
+        finalData.map((val, idx) => {
+            var sqlEditQtyItem = ''
+
+            if(status_egg && data_egg.index === idx) {
+                sqlEditQtyItem = `UPDATE toko.barang SET jumlah_barang = jumlah_barang - ${val.qty} WHERE id_barang = ${val.idItem};
+    
+                                 UPDATE "humanResource"."owner" SET kg = kg - ${val.qty} WHERE id_owner = ${req.logedUser.id_owner};`
+            } else {
+                sqlEditQtyItem = `UPDATE toko.barang SET jumlah_barang = jumlah_barang - ${val.qty} WHERE id_barang = ${val.idItem};`
+            }
 
             db.query(sqlEditQtyItem, (err, resultEditQty) => {
                 if(err) {
@@ -253,7 +261,9 @@ module.exports = {
     editHargaTelur: (req, res) => {
         const sql = `UPDATE "humanResource"."owner" 
                     SET harga_telur = ${req.body.harga_telur}
-                    WHERE id_owner = ${req.logedUser.id_owner};`
+                    WHERE id_owner = ${req.logedUser.id_owner};
+
+                    UPDATE toko.barang SET harga_barang = ${req.body.harga_telur} WHERE nama_barang = 'Telur' AND fid_owner = ${req.logedUser.id_owner};`
 
         db.query(sql, (err, results) => {
             if(err) {
