@@ -35,7 +35,7 @@ module.exports = {
                 SELECT id_owner, jumlah_butir, kg, harga_telur FROM "humanResource"."owner" WHERE id_owner = ${req.logedUser.id_owner};
                                 
                 SELECT saldo FROM "humanResource"."owner" WHERE id_owner = ${req.logedUser.id_owner};`
-
+  
         db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
@@ -145,9 +145,9 @@ module.exports = {
     },
     checkOut: (req, res) => {
         const {
-            status_egg, data_egg, id_customer, id_item, value, jumlah_item, id_supplier, qty_item
+            status_egg, data_egg, id_customer, id_item, value, jumlah_item, id_supplier, qty_item, qty_butir
         } = req.body
-
+        console.log(qty_butir)
         const sql = `INSERT INTO toko.sales (fid_owner, fid_customer, fid_item, value, jumlah_item, tanggal, fid_supplier)
         VALUES (${req.logedUser.id_owner}, ${id_customer}, '{${id_item}}', ${value}, ${jumlah_item}, NOW(), '{${id_supplier}}');
         
@@ -174,7 +174,7 @@ module.exports = {
             if(status_egg && data_egg.index === idx) {
                 sqlEditQtyItem = `UPDATE toko.barang SET jumlah_barang = jumlah_barang - ${val.qty} WHERE id_barang = ${val.idItem};
     
-                                 UPDATE "humanResource"."owner" SET kg = kg - ${val.qty} WHERE id_owner = ${req.logedUser.id_owner};`
+                                 UPDATE "humanResource"."owner" SET kg = kg - ${val.qty}, jumlah_butir = jumlah_butir - ${qty_butir} WHERE id_owner = ${req.logedUser.id_owner};`
             } else {
                 sqlEditQtyItem = `UPDATE toko.barang SET jumlah_barang = jumlah_barang - ${val.qty} WHERE id_barang = ${val.idItem};`
             }
@@ -190,7 +190,7 @@ module.exports = {
             if(err) {
                 res.status(500).send(err)
             }
-
+                
             req.app.io.emit('check-out' , { message : 'sukses' }) 
             res.status(200).send({ message: "check-out-success" })
         })        
@@ -215,47 +215,58 @@ module.exports = {
         JOIN toko.supplier p
         ON p.id_supplier =  ANY (s.fid_supplier) WHERE s.id_sales = ANY(
             SELECT id_sales FROM toko.sales WHERE fid_owner = ${req.logedUser.id_owner})
-            ORDER BY s.id_sales DESC;`
+            ORDER BY s.id_sales DESC;
+            
+            SELECT kg, jumlah_butir
+            FROM "humanResource".owner
+            WHERE id_owner = ${req.logedUser.id_owner};`
 
-        // console.log(sqlGet)
         db.query(sqlGet, (err, resultGet) => {
             if(err) {
                 res.status(500).send(err)
             }
+            var data 
+            if(resultGet === undefined) {
+                data = []
+            } else {
 
-            var sales = resultGet[0].rows
-            var item = resultGet[1].rows
-            var supplier = resultGet[2].rows
+                var sales = resultGet[0].rows
+                var item = resultGet[1].rows
+                var supplier = resultGet[2].rows
+                var egg = resultGet[3].rows
 
-            sales.map((val, idx) => {
-                var id_sales = val.id_sales
-                var dataName = []
+                sales.map((val, idx) => {
+                    var id_sales = val.id_sales
+                    var dataName = []
 
-                item.map((e) => {
-                    var id_sales_item = e.id_sales
+                    item.map((e) => {
+                        var id_sales_item = e.id_sales
 
-                    if(id_sales === id_sales_item) {
-                        dataName.push(e.nama_barang)
-                    }
+                        if(id_sales === id_sales_item) {
+                            dataName.push(e.nama_barang)
+                        }
+                    })
+                    sales[idx].nama_barang = dataName
                 })
-                sales[idx].nama_barang = dataName
-            })
 
-            sales.map((val, idx) => {
-                var id_sales = val.id_sales
-                var dataName = []
+                sales.map((val, idx) => {
+                    var id_sales = val.id_sales
+                    var dataName = []
 
-                supplier.map((e) => {
-                    var id_sales_item = e.id_sales
+                    supplier.map((e) => {
+                        var id_sales_item = e.id_sales
 
-                    if(id_sales === id_sales_item) {
-                        dataName.push(e.nama_supplier)
-                    }
+                        if(id_sales === id_sales_item) {
+                            dataName.push(e.nama_supplier)
+                        }
+                    })
+                    sales[idx].nama_supplier = dataName
                 })
-                sales[idx].nama_supplier = dataName
-            })
-
-            res.status(200).send(sales)            
+                
+                data = sales
+            }   
+                
+            res.status(200).send({data, egg})            
         })
     },
     editHargaTelur: (req, res) => {

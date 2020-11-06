@@ -2,7 +2,7 @@ const { db } = require('../helper/database')
 
 module.exports = {
     getDataLocation: (req, res) => {
-        const sql = `SELECT * FROM kandang."location" WHERE fid_owner = ${req.logedUser.id_owner} ORDER BY id_location;`
+        const sql = `SELECT * FROM kandang."location" WHERE fid_owner = 1 ORDER BY id_location;`
         
         db.query(sql, (err, results) => {
             if(err) {
@@ -15,7 +15,7 @@ module.exports = {
     addLocation: (req, res) => {
         const sql = `INSERT INTO kandang."location" (fid_owner, location_name)
         VALUES (${req.logedUser.id_owner}, '${req.body.location_name}');`
-        console.log(req.body)
+   
         db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
@@ -229,8 +229,8 @@ module.exports = {
                         reportFcr = reportFcr/reportCount
     
                         const sqlTotalRows = `UPDATE kandang."rows" SET 
-                        jumlah_butir = '${reportJumlahButir}', tray = '${reportTray}', kg = '${reportKg.toFixed(2)}', tara = '${reportTara.toFixed(2)}', netto = '${reportNetto.toFixed(2)}', mati_afkir = '${reportMatiAfkir}', 
-                        sisa_ekor = '${reportSisaEkor}', "100/kg" = ${report100Kg.toFixed(2)}, tanggal = NOW() WHERE id_rows = ${data.id_rows};`
+                        jumlah_butir = '${reportJumlahButir}', tray = '${reportTray}', kg = '${reportKg.toFixed(2)}', tara = '${reportTara.toFixed(2)}', netto = '${reportNetto.toFixed(2)}', 
+                        mati_afkir = '${reportMatiAfkir}', sisa_ekor = '${reportSisaEkor}', "100/kg" = ${report100Kg.toFixed(2)}, tanggal = NOW() WHERE id_rows = ${data.id_rows};`
                 
                         db.query(sqlTotalRows, (err, resultTotalRows) => {
                             if(err) {
@@ -338,7 +338,7 @@ module.exports = {
     
                                             const sqlGetLocation = `SELECT * FROM kandang."location" WHERE fid_owner = ${req.logedUser.id_owner} ORDER BY id_location;
                                             SELECT COUNT(*) FROM kandang."location" WHERE fid_owner = ${req.logedUser.id_owner};`
-    
+                                          
                                             db.query(sqlGetLocation, (err, resultLocation) => {
                                                 if(err) {
                                                     res.status(500).send(err)
@@ -383,7 +383,7 @@ module.exports = {
                                                 tanggal = NOW() WHERE id_owner = ${req.logedUser.id_owner};
                                                 
                                                 UPDATE toko.barang SET jumlah_barang = ${locationKg} WHERE nama_barang = 'Telur' AND fid_owner = ${req.logedUser.id_owner};`
-                                                
+                                               
                                                 db.query(sqlTotalOwner, (err, resultTotalOwner) => {
                                                     if(err) {
                                                         console.log(err)
@@ -444,6 +444,7 @@ module.exports = {
 
                 db.query(sqlEditRows, (err, results) => {
                     if(err) {
+                        console.log(err)
                     res.status(500).send(err)
                 }
                     
@@ -518,7 +519,7 @@ module.exports = {
 
                                     const editOwnerAyamPakan = `UPDATE "humanResource"."owner" SET ayam = '${totalAyamLoc}', pakan = '${totalPakanLoc}'
                                     WHERE id_owner = ${req.logedUser.id_owner};`
-
+                                    
                                     db.query(editOwnerAyamPakan, (err, resultEditOwner) => {
                                         if(err) {
                                             res.status(500).send(err)
@@ -537,11 +538,12 @@ module.exports = {
     },
     getDataOwnerKandang: (req, res) => {
         const sql = `SELECT * FROM "humanResource"."owner" WHERE id_owner = ${req.logedUser.id_owner};
-                    SELECT COUNT(*) FROM kandang."location" WHERE fid_owner = 1;
-                    SELECT COUNT(*) FROM kandang.unit WHERE fid_owner = 1;`
+                    SELECT COUNT(*) FROM kandang."location" WHERE fid_owner = ${req.logedUser.id_owner};
+                    SELECT COUNT(*) FROM kandang.unit WHERE fid_owner = ${req.logedUser.id_owner};`
 
         db.query(sql, (err, results) => {
             if(err) {
+                console.log(err)
                 res.status(500).send(err)
             }   
 
@@ -550,7 +552,6 @@ module.exports = {
                 countLocation: results[1].rows[0].count,
                 countUnit: results[2].rows[0].count
             }
-
             res.status(200).send(response)
         })
     },

@@ -4,7 +4,7 @@ const { authentication } = require('../helper/middleware/auth')
 
 const router = express.Router()
 
-router.get('/get-data-location', authentication, kandangController.getDataLocation)
+router.get('/get-data-location', kandangController.getDataLocation)
 router.post('/add-location', authentication, kandangController.addLocation)
 router.get('/get-data-kandang/:id_location', authentication, kandangController.getDataKandang)
 router.post('/add-kandang', authentication, kandangController.addKandang)
