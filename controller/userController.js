@@ -40,7 +40,7 @@ module.exports = {
         const sql = `SELECT COUNT(*) FROM "humanResource"."owner" WHERE ownername = '${req.body.username}' AND password = '${passwordEnc}'`
         const sql2 = `INSERT INTO "humanResource".owner (ownername, password)
                     VALUES ('${req.body.username}', '${passwordEnc}') RETURNING id_owner`
-        console.log(sql)
+        
         db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)

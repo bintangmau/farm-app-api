@@ -147,7 +147,7 @@ module.exports = {
         const {
             status_egg, data_egg, id_customer, id_item, value, jumlah_item, id_supplier, qty_item, qty_butir
         } = req.body
-        console.log(qty_butir)
+     
         const sql = `INSERT INTO toko.sales (fid_owner, fid_customer, fid_item, value, jumlah_item, tanggal, fid_supplier)
         VALUES (${req.logedUser.id_owner}, ${id_customer}, '{${id_item}}', ${value}, ${jumlah_item}, NOW(), '{${id_supplier}}');
         
@@ -181,7 +181,6 @@ module.exports = {
 
             db.query(sqlEditQtyItem, (err, resultEditQty) => {
                 if(err) {
-                    console.log(err)
                     messageQty.push({err})
                 } 
             })
