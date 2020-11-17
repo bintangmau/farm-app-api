@@ -145,9 +145,41 @@ module.exports = {
     },
     checkOut: (req, res) => {
         const {
-            status_egg, data_egg, id_customer, id_item, value, jumlah_item, id_supplier, qty_item, qty_butir
+            status_egg, data_egg, id_customer, id_item, value, jumlah_item, id_supplier, qty_item, qty_butir, customer_name, data_gudang
         } = req.body
-     
+        
+        if(customer_name.toLowerCase() === 'gudang') {
+            data_gudang.forEach((val, idx) => {
+                var sqlGetGudang = `SELECT COUNT(*) FROM gudang.item WHERE nama_barang = '${val.name}';`
+
+                db.query(sqlGetGudang, (errGudang, resultGudang) => {
+                    if(errGudang) {
+                        res.status(500).send(errGudang)
+                    }
+                    if(Number(resultGudang.rows[0].count < 1)) {
+                        const sqlAddGudang = `INSERT INTO gudang.item (nama_barang, "in", tanggal, fid_owner)
+                        VALUES ('${val.name}', ${qty_item[idx]}, NOW(), ${req.logedUser.id_owner});`
+
+                        db.query(sqlAddGudang, (errAdd, resultAdd) => {
+                            if(errAdd) {
+                                res.status(500).send(errEditGudang)
+                            }
+                        })
+                    } else {
+                        var sqlEditGudang = `UPDATE gudang."item" 
+                                    SET "in" = ${qty_item[idx]}
+                                    WHERE nama_barang = '${val.name}' AND fid_owner = ${req.logedUser.id_owner};`
+                        
+                        db.query(sqlEditGudang, (errEditGudang, resultEditGudang) => {
+                            if(errEditGudang) {
+                                res.status(500).send(err)
+                            }
+                        })
+                    }
+                })
+            })
+        }
+
         const sql = `INSERT INTO toko.sales (fid_owner, fid_customer, fid_item, value, jumlah_item, tanggal, fid_supplier)
         VALUES (${req.logedUser.id_owner}, ${id_customer}, '{${id_item}}', ${value}, ${jumlah_item}, NOW(), '{${id_supplier}}');
         
@@ -299,14 +331,27 @@ module.exports = {
         })
     },
     plusJumlahBarang: (req, res) => {
-        const sql = `UPDATE toko.barang 
-                    SET jumlah_barang = jumlah_barang + ${req.body.value}
-                    WHERE id_barang = ${req.body.id_barang};
-                    
-                    UPDATE "humanResource"."owner"
-                    SET saldo = saldo - ${req.body.total}
-                    WHERE id_owner = ${req.logedUser.id_owner};`
-
+        console.log(req.body.status, req.body.value)
+        var sql
+        if(!req.body.status) {
+            console.log("NON EGG")
+            sql = `UPDATE toko.barang 
+            SET jumlah_barang = jumlah_barang + ${req.body.value}
+            WHERE id_barang = ${req.body.id_barang};
+            
+            UPDATE "humanResource"."owner"
+            SET saldo = saldo - ${req.body.total}
+            WHERE id_owner = ${req.logedUser.id_owner};`
+        } else {
+            console.log("EGG")
+            sql = `UPDATE toko.barang 
+            SET jumlah_barang = jumlah_barang + ${req.body.value}
+            WHERE id_barang = ${req.body.id_barang};
+            
+            UPDATE "humanResource"."owner"
+            SET saldo = saldo - ${req.body.total}, kg = kg + ${req.body.value}
+            WHERE id_owner = ${req.logedUser.id_owner};`
+        }
         db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)

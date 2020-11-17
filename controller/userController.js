@@ -56,18 +56,38 @@ module.exports = {
 
                     var lastId = results2.rows[0].id_owner
 
-                    const sqlInsertEgg = `INSERT INTO toko.barang
-                    ( nama_barang, jumlah_barang, harga_barang, satuan_barang, fid_supplier, fid_owner)
-                    VALUES
-                    ('Telur', 0, 0, 'Kg', 0, ${lastId});`
+                    const createVariables = `INSERT INTO toko.supplier (nama_supplier, alamat_supplier, nomor_supplier, fid_owner)
+                    VALUES ('Kandang', '', '', ${lastId});
+                    INSERT INTO toko.supplier (nama_supplier, alamat_supplier, nomor_supplier, fid_owner)
+                    VALUES ('Gudang', '', '', ${lastId});
+                    INSERT INTO toko.supplier (nama_supplier, alamat_supplier, nomor_supplier, fid_owner)
+                    VALUES ('DOC', '', '', ${lastId});
+                                        
+                    INSERT INTO toko.customer (customer_name, customer_address, customer_phone, join_date, fid_owner)
+                    VALUES ('Kandang', '', '', NOW(), ${lastId});
+                    INSERT INTO toko.customer (customer_name, customer_address, customer_phone, join_date, fid_owner)
+                    VALUES ('Gudang', '', '', NOW(), ${lastId});
+                    INSERT INTO toko.customer (customer_name, customer_address, customer_phone, join_date, fid_owner)
+                    VALUES ('DOC', '', '', NOW(), ${lastId});`    
 
-                    db.query(sqlInsertEgg, (err, resultEgg) => {
+                    db.query(createVariables, (err, resultCreate) => {
                         if(err) {
                             res.status(500).send(err)
                         }
-  
-                        var message = "Register Success"
-                        res.status(200).send({ message })
+                        
+                        const sqlInsertEgg = `INSERT INTO toko.barang
+                        ( nama_barang, jumlah_barang, harga_barang, satuan_barang, fid_supplier, fid_owner)
+                        VALUES
+                        ('Telur', 0, 0, 'Kg', 0, ${lastId});`
+                        
+                        db.query(sqlInsertEgg, (err, resultEgg) => {
+                            if(err) {
+                                res.status(500).send(err)
+                            }
+                            
+                            var message = "Register Success"
+                            res.status(200).send({ message })
+                        })
                     })
                 })
             } else {

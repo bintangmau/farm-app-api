@@ -2,8 +2,8 @@ const { db } = require('../helper/database')
 
 module.exports = {
     getDataLocation: (req, res) => {
-        const sql = `SELECT * FROM kandang."location" WHERE fid_owner = 1 ORDER BY id_location;`
-        
+        const sql = `SELECT * FROM kandang."location" WHERE fid_owner = ${req.logedUser.id_owner} ORDER BY id_location;`
+        // console.log(sql)
         db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
@@ -15,7 +15,7 @@ module.exports = {
     addLocation: (req, res) => {
         const sql = `INSERT INTO kandang."location" (fid_owner, location_name)
         VALUES (${req.logedUser.id_owner}, '${req.body.location_name}');`
-   
+        console.log(sql)
         db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
@@ -32,7 +32,7 @@ module.exports = {
                 ORDER BY id_unit;
 
                 SELECT location_name FROM kandang."location" WHERE id_location = ${req.params.id_location};`
-    
+        console.log(sql)
             db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
