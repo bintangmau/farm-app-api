@@ -2,9 +2,13 @@ const { db } = require('../helper/database')
 
 module.exports = {
     addNewCustomer: (req, res) => {
+        const {
+            name, address, phone, isGudang
+        } = req.body
+       
         const sql = `INSERT INTO toko.customer
             (customer_name, customer_address, customer_phone, join_date, fid_owner)
-        VALUES ('${req.body.name}', '${req.body.address}', '${req.body.phone}', NOW(), ${req.logedUser.id_owner});
+        VALUES ('${name}', '${address}', '${phone}', NOW(), ${req.logedUser.id_owner}) RETURNING id_customer;
                 
         UPDATE "humanResource"."owner"
         SET customer_date = NOW()
@@ -12,12 +16,25 @@ module.exports = {
 
         db.query(sql, (err, results) => {
             if(err) {
-                console.log(err)
                 res.status(500).send(err)
             }
 
-            req.app.io.emit('add-customer' , { message : 'sukses' }) 
-            res.status(200).send({ message: "input customer success" })
+            const sqlAddToGudang = `INSERT INTO gudang.gudang (gudang_name, fid_owner, fid_gudang_customer)
+                                    VALUES ('${name}', ${req.logedUser.id_owner}, ${results[0].rows[0].id_customer});`
+  
+            if(isGudang) {
+                db.query(sqlAddToGudang, (errAddGudang, resultsAddGudang) => {
+                    if(err) {
+                        console.log(errAddGudang)
+                        res.status(500).send(errAddGudang)
+                    }
+                    req.app.io.emit('add-customer' , { message : 'sukses' }) 
+                    res.status(200).send({ message: "input customer success" })
+                })
+            } else {   
+                req.app.io.emit('add-customer' , { message : 'sukses' }) 
+                res.status(200).send({ message: "input customer success" })
+            }
         })
     },
     getDataCustomer: (req, res) => {
