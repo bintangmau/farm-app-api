@@ -32,7 +32,7 @@ module.exports = {
                 ORDER BY id_unit;
 
                 SELECT location_name FROM kandang."location" WHERE id_location = ${req.params.id_location};`
-        console.log(sql)
+            // console.log(sql)s
             db.query(sql, (err, results) => {
             if(err) {
                 res.status(500).send(err)
