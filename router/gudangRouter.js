@@ -9,5 +9,6 @@ router.get('/get-gudang-location', authentication, gudangController.getGudangLoc
 router.post('/add-gudang', authentication, gudangController.addGudang)
 router.post('/get-data-item', authentication, gudangController.getDataItem)
 router.post('/search-data-item', authentication, gudangController.searchDataItem)
+router.post('/search-data-item-campuran', authentication, gudangController.searchDataItemCampuran)
 
 module.exports = router

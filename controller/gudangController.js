@@ -46,5 +46,18 @@ module.exports = {
 
             res.status(200).send(results.rows)
         })
+    },
+    searchDataItemCampuran: (req, res) => {
+        const sql = `SELECT id_barang, nama_barang, "in" 
+                    FROM gudang.item WHERE fid_owner = ${req.logedUser.id_owner} 
+                    AND fid_location = ${req.body.id_location} AND LOWER(nama_barang) LIKE LOWER('%${req.body.keyword}%');`
+
+        db.query(sql, (err, results) => {
+            if(err) {
+                res.status(500).send(err)
+            }
+
+            res.status(200).send(results.rows)
+        })
     }
 }
