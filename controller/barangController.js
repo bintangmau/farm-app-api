@@ -145,37 +145,53 @@ module.exports = {
     },
     checkOut: (req, res) => {
         const {
-            status_egg, data_egg, id_customer, id_item, value, jumlah_item, id_supplier, qty_item, qty_butir, customer_name, data_gudang
+            status_egg, data_egg, id_customer, id_item, value, jumlah_item, id_supplier, qty_item, qty_butir, data_gudang, isGudang
         } = req.body
-        
-        if(customer_name.toLowerCase() === 'gudang') {
+
+        if(isGudang) {
             data_gudang.forEach((val, idx) => {
-                var sqlGetGudang = `SELECT COUNT(*) FROM gudang.item WHERE nama_barang = '${val.name}';`
+                const sqlGetIdGudang = `SELECT id_gudang from gudang.gudang WHERE fid_gudang_customer = ${id_customer};`
 
-                db.query(sqlGetGudang, (errGudang, resultGudang) => {
-                    if(errGudang) {
-                        res.status(500).send(errGudang)
+                db.query(sqlGetIdGudang, (errGetIdGudang, resultGetIdGudang) => {
+                    if(errGetIdGudang) {
+                        res.status(500).send(errGetIdGudang)
                     }
-                    if(Number(resultGudang.rows[0].count < 1)) {
-                        const sqlAddGudang = `INSERT INTO gudang.item (nama_barang, "in", tanggal, fid_owner)
-                        VALUES ('${val.name}', ${qty_item[idx]}, NOW(), ${req.logedUser.id_owner});`
 
-                        db.query(sqlAddGudang, (errAdd, resultAdd) => {
-                            if(errAdd) {
-                                res.status(500).send(errEditGudang)
-                            }
-                        })
-                    } else {
-                        var sqlEditGudang = `UPDATE gudang."item" 
-                                    SET "in" = ${qty_item[idx]}
-                                    WHERE nama_barang = '${val.name}' AND fid_owner = ${req.logedUser.id_owner};`
-                        
-                        db.query(sqlEditGudang, (errEditGudang, resultEditGudang) => {
-                            if(errEditGudang) {
-                                res.status(500).send(err)
-                            }
-                        })
-                    }
+                    var sqlGetGudang = `SELECT COUNT(*) FROM gudang.item WHERE nama_barang = '${val.name}' AND fid_owner = ${req.logedUser.id_owner} 
+                    AND fid_location = ${resultGetIdGudang.rows[0].id_gudang};`
+
+                    db.query(sqlGetGudang, (errGudang, resultGudang) => {
+                        if(errGudang) {
+                            res.status(500).send(errGudang)
+                        }
+     
+                        if(Number(resultGudang.rows[0].count < 1)) {
+                          
+                            const sqlAddGudang = `INSERT INTO gudang.item (nama_barang, "in", tanggal, fid_owner, fid_location)
+                            VALUES ('${val.name}', ${qty_item[idx]}, NOW(), ${req.logedUser.id_owner}, ${resultGetIdGudang.rows[0].id_gudang});`
+              
+                            db.query(sqlAddGudang, (errAddGudang, resultAdd) => {
+                                if(errAddGudang) {
+                                    res.status(500).send(errAddGudang)
+                                }
+                                req.app.io.emit('insert-item-gudang' , { message : 'sukses' }) 
+                            })
+                            
+                        } else {
+                            var sqlEditGudang = `UPDATE gudang.item 
+                            SET "in" = ${qty_item[idx]}
+                            FROM gudang.gudang g
+                            WHERE g.fid_gudang_customer = ${id_customer} AND g.fid_owner = ${req.logedUser.id_owner} AND nama_barang = '${val.name}';`
+        
+                            db.query(sqlEditGudang, (errEditGudang, resultEditGudang) => {
+                                if(errEditGudang) {
+                                    res.status(500).send(errEditGudang)
+                                }
+                                
+                                req.app.io.emit('update-item-gudang' , { message : 'sukses' }) 
+                            })
+                        }
+                    })
                 })
             })
         }
@@ -215,6 +231,7 @@ module.exports = {
                 if(err) {
                     messageQty.push({err})
                 } 
+
             })
         })
         db.query(sql, (err, results) => {
